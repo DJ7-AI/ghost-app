@@ -154,7 +154,7 @@ body{font-family:'DM Mono',monospace;color:var(--text);overscroll-behavior:none}
 @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
 /* ROASTMASTER */
-#v-roastmaster{background:var(--bg)}
+#v-roastmaster{background:var(--bg);display:flex;flex-direction:column}
 .rm-header{padding:calc(var(--safe-top) + 6px) 22px 14px;flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:14px}
 .rm-avatar{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#1a0000,#2a0505);border:1px solid rgba(255,59,59,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;position:relative}
 .rm-online{position:absolute;bottom:2px;right:2px;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid var(--bg);animation:pulse 2s infinite}
@@ -164,7 +164,7 @@ body{font-family:'DM Mono',monospace;color:var(--text);overscroll-behavior:none}
 .rm-ctx{padding:10px 16px;background:rgba(255,59,59,.04);border-bottom:1px solid rgba(255,59,59,.1);display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .rm-ctx::-webkit-scrollbar{display:none}
 .ctx-pill{font-size:10px;color:var(--red);letter-spacing:.5px;white-space:nowrap;opacity:.7}
-.chat-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:14px 14px calc(80px + 58px + var(--safe-bot))}
+.chat-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:14px 14px 4px}
 .chat-area::-webkit-scrollbar{display:none}
 .msg{margin-bottom:14px;display:flex;gap:10px;align-items:flex-end}
 .msg.user{flex-direction:row-reverse}
@@ -176,17 +176,7 @@ body{font-family:'DM Mono',monospace;color:var(--text);overscroll-behavior:none}
 .td{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:tdot 1.4s infinite}
 .td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
 @keyframes tdot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
-.chat-inp-wrap{
-  position:fixed;bottom:calc(58px + var(--safe-bot));
-  left:50%;transform:translateX(-50%);
-  width:100%;max-width:480px;
-  padding:10px 14px 10px;
-  background:rgba(8,8,8,.97);
-  border-top:1px solid var(--bdr);
-  display:flex;gap:10px;align-items:flex-end;
-  z-index:40;
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-}
+.chat-inp-wrap{flex-shrink:0;padding:10px 14px calc(14px + var(--safe-bot));background:var(--bg);border-top:1px solid var(--bdr);display:flex;gap:10px;align-items:flex-end}
 .chat-inp{flex:1;background:var(--bg2);border:1px solid var(--bdr2);border-radius:14px;padding:11px 13px;color:#fff;font-family:'DM Mono',monospace;font-size:14px;outline:none;resize:none;max-height:100px;line-height:1.5;transition:border-color .15s}
 .chat-inp:focus{border-color:rgba(255,59,59,.5)}
 .chat-inp::placeholder{color:var(--t4)}
@@ -430,7 +420,7 @@ body{font-family:'DM Mono',monospace;color:var(--text);overscroll-behavior:none}
 </div>
 
 <!-- ROASTMASTER -->
-<div class="view" id="v-roastmaster">
+<div class="view" id="v-roastmaster" style="display:flex;flex-direction:column">
   <div class="rm-header">
     <div class="rm-avatar">🤖<div class="rm-online"></div></div>
     <div style="flex:1">
@@ -629,8 +619,11 @@ async function callClaude(messages, system, maxTokens = 300) {
       return raw.content?.filter(b => b.type === 'text').map(b => b.text).join('') || null;
     }
     if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      console.warn('[Ghost] API error', res.status, errBody);
       if (res.status === 429) { showToast('"Slow down. Ghost needs a moment to judge you."'); return null; }
-      console.warn('API error', res.status);
+      if (res.status === 503) { showToast('"API key not configured. Check Vercel env vars."'); return null; }
+      if (res.status === 502) { showToast('"Claude API error. Check your API key is valid."'); return null; }
       return null;
     }
     const data = await res.json();
