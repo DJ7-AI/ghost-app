@@ -1,182 +1,102 @@
-// /api/roast.js
-// Secure server-side proxy for Claude API
-// Keeps API key off the client, adds rate limiting and input sanitization
+// /api/roast.js — Standard Node.js Serverless Function
+// Switched from Edge runtime — process.env works reliably here
 
-export const config = { runtime: 'edge' };
-
-// In-memory rate limiting (use Vercel KV in production for persistence across instances)
+const RATE_LIMIT_WINDOW = 60_000;
+const RATE_LIMIT_MAX = 20;
 const rateLimitMap = new Map();
-const RATE_LIMIT_WINDOW = 60_000; // 1 minute
-const RATE_LIMIT_MAX = 20; // max 20 calls per minute per IP
-
-// Allowed origins (update with your real domain)
-const ALLOWED_ORIGINS = [
-  'https://ghostyourself.app',
-  'https://www.ghostyourself.app',
-  'https://ghost-app.vercel.app',
-  // Add your Vercel preview URL pattern if needed
-];
 
 function isAllowedOrigin(origin) {
-  if (!origin) return false;
-  if (ALLOWED_ORIGINS.includes(origin)) return true;
-  // Allow vercel preview deployments
+  if (!origin) return true;
   if (origin.endsWith('.vercel.app')) return true;
-  // Allow localhost for development
   if (origin.startsWith('http://localhost')) return true;
+  if (origin.startsWith('http://127.0.0.1')) return true;
   return false;
 }
 
-function getRateLimitEntry(ip) {
+function getRateLimit(ip) {
   const now = Date.now();
   const entry = rateLimitMap.get(ip);
   if (!entry || now > entry.reset) {
-    return { count: 0, reset: now + RATE_LIMIT_WINDOW };
+    const fresh = { count: 0, reset: now + RATE_LIMIT_WINDOW };
+    rateLimitMap.set(ip, fresh);
+    return fresh;
   }
   return entry;
-}
-
-function sanitizeGoalName(name) {
-  if (typeof name !== 'string') return '';
-  // Remove any attempts to inject instructions
-  return name
-    .slice(0, 100) // hard length limit
-    .replace(/[<>]/g, '') // strip HTML
-    .replace(/ignore|disregard|forget|system|prompt|instruction/gi, '***') // basic prompt injection guard
-    .trim();
 }
 
 function sanitizeMessages(messages) {
   if (!Array.isArray(messages)) return [];
   return messages
-    .slice(-30) // max 30 messages (keeps context window sane)
+    .slice(-30)
     .map(m => ({
       role: m.role === 'user' ? 'user' : 'assistant',
-      content: typeof m.content === 'string'
-        ? m.content.slice(0, 2000) // cap each message at 2000 chars
-        : '',
+      content: typeof m.content === 'string' ? m.content.slice(0, 2000) : '',
     }))
     .filter(m => m.content.length > 0);
 }
 
-export default async function handler(req) {
-  const origin = req.headers.get('origin') || '';
+export default async function handler(req, res) {
+  const origin = req.headers['origin'] || '';
 
-  // CORS
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': isAllowedOrigin(origin) ? origin : 'null',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
-  };
+  res.setHeader('Access-Control-Allow-Origin', isAllowedOrigin(origin) ? (origin || '*') : 'null');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405, headers: corsHeaders });
-  }
-
-  // Rate limiting by IP
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  const limit = getRateLimitEntry(ip);
+  // Rate limiting
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
+  const limit = getRateLimit(ip);
   limit.count++;
-  rateLimitMap.set(ip, limit);
-
   if (limit.count > RATE_LIMIT_MAX) {
-    return new Response(JSON.stringify({ error: 'Too many requests. Slow down.' }), {
-      status: 429,
-      headers: { ...corsHeaders, 'content-type': 'application/json', 'Retry-After': '60' },
-    });
+    return res.status(429).json({ error: 'Too many requests. Slow down.' });
   }
 
-  // Parse body
-  let body;
-  try {
-    body = await req.json();
-  } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
-      status: 400,
-      headers: { ...corsHeaders, 'content-type': 'application/json' },
-    });
+  const body = req.body;
+  if (!body || !Array.isArray(body.messages) || body.messages.length === 0) {
+    return res.status(400).json({ error: 'Invalid request' });
   }
 
-  const { messages, system, maxTokens = 300, goalName } = body;
-
-  // Validate
-  if (!messages || !Array.isArray(messages) || messages.length === 0) {
-    return new Response(JSON.stringify({ error: 'Invalid messages' }), {
-      status: 400,
-      headers: { ...corsHeaders, 'content-type': 'application/json' },
-    });
-  }
-
-  // Sanitize inputs
+  const { messages, system, maxTokens = 300 } = body;
   const safeMessages = sanitizeMessages(messages);
-  const safeSystem = typeof system === 'string' ? system.slice(0, 3000) : '';
+  const safeSystem = typeof system === 'string' ? system.slice(0, 3000) : undefined;
   const safeMaxTokens = Math.min(Math.max(Number(maxTokens) || 300, 50), 500);
 
-  // If goalName is provided, sanitize it
-  const safeGoalName = goalName ? sanitizeGoalName(goalName) : null;
-  const finalSystem = safeGoalName
-    ? safeSystem.replace(/{GOAL_NAME}/g, safeGoalName)
-    : safeSystem;
-
-  // Check API key
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error('ANTHROPIC_API_KEY not set');
-    return new Response(JSON.stringify({ error: 'Service not configured' }), {
-      status: 503,
-      headers: { ...corsHeaders, 'content-type': 'application/json' },
-    });
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.error('[Ghost] ANTHROPIC_API_KEY not set');
+    return res.status(503).json({ error: 'Service not configured' });
   }
 
-  // Call Claude
   try {
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: safeMaxTokens,
-        system: finalSystem || undefined,
+        ...(safeSystem ? { system: safeSystem } : {}),
         messages: safeMessages,
       }),
     });
 
     if (!claudeRes.ok) {
       const errText = await claudeRes.text();
-      console.error('Claude API error:', claudeRes.status, errText);
-      return new Response(JSON.stringify({ error: 'AI service error' }), {
-        status: 502,
-        headers: { ...corsHeaders, 'content-type': 'application/json' },
-      });
+      console.error('[Ghost] Claude error:', claudeRes.status, errText);
+      return res.status(502).json({ error: 'AI service error' });
     }
 
     const data = await claudeRes.json();
-    const text = data.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('');
+    const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    return res.status(200).json({ text });
 
-    return new Response(JSON.stringify({ text }), {
-      status: 200,
-      headers: {
-        ...corsHeaders,
-        'content-type': 'application/json',
-        'cache-control': 'no-store, no-cache',
-      },
-    });
   } catch (err) {
-    console.error('Proxy error:', err);
-    return new Response(JSON.stringify({ error: 'Internal error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'content-type': 'application/json' },
-    });
+    console.error('[Ghost] Proxy error:', err);
+    return res.status(500).json({ error: 'Internal error' });
   }
 }
