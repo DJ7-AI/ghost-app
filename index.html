@@ -176,13 +176,14 @@ body{font-family:'DM Mono',monospace;color:var(--text);overscroll-behavior:none}
 .td{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:tdot 1.4s infinite}
 .td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
 @keyframes tdot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
-.chat-inp-wrap{flex-shrink:0;padding:10px 14px calc(14px + var(--safe-bot));background:var(--bg);border-top:1px solid var(--bdr);display:flex;gap:10px;align-items:flex-end}
-.chat-inp{flex:1;background:var(--bg2);border:1px solid var(--bdr2);border-radius:14px;padding:11px 13px;color:#fff;font-family:'DM Mono',monospace;font-size:14px;outline:none;resize:none;max-height:100px;line-height:1.5;transition:border-color .15s}
-.chat-inp:focus{border-color:rgba(255,59,59,.5)}
-.chat-inp::placeholder{color:var(--t4)}
-.chat-send{width:40px;height:40px;background:var(--red);border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .1s}
+.chat-inp-wrap{flex-shrink:0;padding:12px 14px calc(16px + var(--safe-bot));background:#111;border-top:1px solid rgba(255,255,255,.15);display:flex;gap:10px;align-items:flex-end}
+.chat-inp{flex:1;background:#1e1e1e;border:1.5px solid rgba(255,255,255,.25);border-radius:14px;padding:12px 14px;color:#fff;font-family:'DM Mono',monospace;font-size:14px;outline:none;resize:none;max-height:100px;line-height:1.5;transition:border-color .2s}
+.chat-inp:focus{border-color:var(--red);background:#222}
+.chat-inp::placeholder{color:#666}
+.chat-send{width:44px;height:44px;background:var(--red);border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .1s,background .15s}
+.chat-send:hover{background:#ff5555}
 .chat-send:active{transform:scale(.92)}
-.chat-send:disabled{background:var(--bg3);cursor:not-allowed}
+.chat-send:disabled{background:#2a2a2a;cursor:not-allowed}
 
 /* STATS + SHAME CARD */
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px;margin-bottom:22px}
@@ -439,7 +440,7 @@ body{font-family:'DM Mono',monospace;color:var(--text);overscroll-behavior:none}
     <button class="btn-p" onclick="G('v-pw','')" style="width:100%;padding:13px;font-size:15px">UNLOCK ROASTMASTER →</button>
   </div>
   <div class="chat-inp-wrap" id="rm-inp-wrap">
-    <textarea class="chat-inp" id="chat-inp" placeholder="Type here and press Enter to send..." rows="1" maxlength="500"></textarea>
+    <textarea class="chat-inp" id="chat-inp" placeholder="Message the Roastmaster..." rows="1" maxlength="500"></textarea>
     <button class="chat-send" id="chat-send" onclick="sendMsg()" aria-label="Send">
       <svg width="18" height="18" viewBox="0 0 18 18"><path d="M16.5 1.5L8.25 9.75M16.5 1.5L11.25 16.5L8.25 9.75L1.5 6.75L16.5 1.5Z" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
@@ -620,10 +621,15 @@ async function callClaude(messages, system, maxTokens = 300) {
     }
     if (!res.ok) {
       const errBody = await res.json().catch(() => ({}));
-      console.warn('[Ghost] API error', res.status, errBody);
-      if (res.status === 429) { showToast('"Slow down. Ghost needs a moment to judge you."'); return null; }
-      if (res.status === 503) { showToast('"API key not configured. Check Vercel env vars."'); return null; }
-      if (res.status === 502) { showToast('"Claude API error. Check your API key is valid."'); return null; }
+      console.error('[Ghost] API error', res.status, JSON.stringify(errBody));
+      if (res.status === 429) { showToast('"Slow down. Ghost needs a moment."'); return null; }
+      if (res.status === 503) { showToast('"API key missing in Vercel env vars."'); return null; }
+      if (res.status === 502) {
+        const detail = errBody.detail ? errBody.detail.slice(0, 120) : 'unknown';
+        showToast('"Claude error: ' + detail + '"');
+        return null;
+      }
+      showToast('"Error ' + res.status + ': ' + (errBody.error || 'unknown') + '"');
       return null;
     }
     const data = await res.json();
