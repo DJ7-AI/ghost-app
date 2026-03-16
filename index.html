@@ -166,6 +166,7 @@ body{font-family:'DM Mono',monospace;color:var(--text);overscroll-behavior:none}
 .ctx-pill{font-size:10px;color:var(--red);letter-spacing:.5px;white-space:nowrap;opacity:.7}
 .chat-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:14px 14px 0}
 .chat-area::-webkit-scrollbar{display:none}
+.chat-area::-webkit-scrollbar{display:none}
 .msg{margin-bottom:14px;display:flex;gap:10px;align-items:flex-end}
 .msg.user{flex-direction:row-reverse}
 .msg-bubble{max-width:78%;padding:12px 14px;border-radius:18px;font-size:13px;line-height:1.6}
@@ -176,7 +177,7 @@ body{font-family:'DM Mono',monospace;color:var(--text);overscroll-behavior:none}
 .td{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:tdot 1.4s infinite}
 .td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
 @keyframes tdot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
-.chat-inp-wrap{padding:12px 14px calc(14px + var(--safe-bot));flex-shrink:0;background:var(--bg);border-top:1px solid var(--bdr);display:flex;gap:10px;align-items:flex-end}
+.chat-inp-wrap{padding:12px 14px calc(58px + 14px + var(--safe-bot));flex-shrink:0;background:var(--bg);border-top:1px solid var(--bdr);display:flex;gap:10px;align-items:flex-end}
 .chat-inp{flex:1;background:var(--bg2);border:1px solid var(--bdr2);border-radius:14px;padding:11px 13px;color:#fff;font-family:'DM Mono',monospace;font-size:14px;outline:none;resize:none;max-height:100px;line-height:1.5;transition:border-color .15s}
 .chat-inp:focus{border-color:rgba(255,59,59,.5)}
 .chat-inp::placeholder{color:var(--t4)}
@@ -420,39 +421,29 @@ body{font-family:'DM Mono',monospace;color:var(--text);overscroll-behavior:none}
 </div>
 
 <!-- ROASTMASTER -->
-<div class="view" id="v-roastmaster" style="display:flex;flex-direction:column">
-  <!-- Header — always visible -->
+<div class="view" id="v-roastmaster">
   <div class="rm-header">
     <div class="rm-avatar">🤖<div class="rm-online"></div></div>
     <div style="flex:1">
       <div class="rm-name">ROASTMASTER</div>
       <div class="rm-status" id="rm-status">ONLINE — READY TO JUDGE YOU</div>
     </div>
-    <!-- Free tier message counter -->
     <div id="rm-msg-counter" style="display:none;font-size:10px;font-family:'DM Mono',monospace;color:var(--t3);text-align:right;line-height:1.4">
       <span id="rm-msg-left">3</span> free<br>messages
     </div>
   </div>
-
-  <!-- Chat — always shown, input locked after free limit -->
-  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
-    <div class="rm-ctx" id="rm-ctx"></div>
-    <div class="chat-area" id="chat-area" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 0;scrollbar-width:none"></div>
-
-    <!-- Pro upsell banner — shown after free messages used -->
-    <div id="rm-upsell" style="display:none;margin:0 14px 12px;background:rgba(255,59,59,.08);border:1px solid rgba(255,59,59,.25);border-radius:14px;padding:14px;text-align:center">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:#fff;margin-bottom:4px">UNLOCK FULL ACCESS</div>
-      <div style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5;font-style:italic">The Roastmaster remembers everything.<br>Unlimited coaching. $4.99/mo.</div>
-      <button class="btn-p" onclick="G('v-pw','')" style="width:100%;padding:13px;font-size:15px">UNLOCK ROASTMASTER →</button>
-    </div>
-
-    <!-- Input area -->
-    <div class="chat-inp-wrap" id="rm-inp-wrap">
-      <textarea class="chat-inp" id="chat-inp" placeholder="Type your message, hit Enter or tap send..." rows="1" maxlength="500"></textarea>
-      <button class="chat-send" id="chat-send" onclick="sendMsg()" aria-label="Send">
-        <svg width="18" height="18" viewBox="0 0 18 18"><path d="M16.5 1.5L8.25 9.75M16.5 1.5L11.25 16.5L8.25 9.75L1.5 6.75L16.5 1.5Z" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
+  <div class="rm-ctx" id="rm-ctx"></div>
+  <div class="chat-area" id="chat-area"></div>
+  <div id="rm-upsell" style="display:none;margin:0 14px 12px;background:rgba(255,59,59,.08);border:1px solid rgba(255,59,59,.25);border-radius:14px;padding:14px;text-align:center;flex-shrink:0">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:#fff;margin-bottom:4px">UNLOCK FULL ACCESS</div>
+    <div style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5;font-style:italic">Unlimited coaching. AI remembers everything.<br>$4.99/mo — 7-day free trial.</div>
+    <button class="btn-p" onclick="G('v-pw','')" style="width:100%;padding:13px;font-size:15px">UNLOCK ROASTMASTER →</button>
+  </div>
+  <div class="chat-inp-wrap" id="rm-inp-wrap">
+    <textarea class="chat-inp" id="chat-inp" placeholder="Type here and press Enter to send..." rows="1" maxlength="500"></textarea>
+    <button class="chat-send" id="chat-send" onclick="sendMsg()" aria-label="Send">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path d="M16.5 1.5L8.25 9.75M16.5 1.5L11.25 16.5L8.25 9.75L1.5 6.75L16.5 1.5Z" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
   </div>
 </div>
 
@@ -636,7 +627,8 @@ async function callClaude(messages, system, maxTokens = 300) {
     const data = await res.json();
     return data.text || null;
   } catch (e) {
-    showOffline(true);
+    // Only show offline banner for genuine network failures, not API errors
+    if (e instanceof TypeError && e.message.includes('fetch')) showOffline(true);
     return null;
   }
 }
@@ -1377,7 +1369,8 @@ document.getElementById('si-pass').addEventListener('keydown', e => { if (e.key 
 
 // ── INIT ───────────────────────────────────────────────────
 load();
-if (!navigator.onLine) showOffline(true);
+// Delay offline check — navigator.onLine can misreport briefly on first load
+setTimeout(() => { if (!navigator.onLine) showOffline(true); }, 1500);
 if (S.user && S.rl) {
   document.getElementById('v-ob').classList.remove('active');
   document.getElementById('v-home').classList.add('active');
