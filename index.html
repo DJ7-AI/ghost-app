@@ -164,8 +164,7 @@ body{font-family:'DM Mono',monospace;color:var(--text);overscroll-behavior:none}
 .rm-ctx{padding:10px 16px;background:rgba(255,59,59,.04);border-bottom:1px solid rgba(255,59,59,.1);display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .rm-ctx::-webkit-scrollbar{display:none}
 .ctx-pill{font-size:10px;color:var(--red);letter-spacing:.5px;white-space:nowrap;opacity:.7}
-.chat-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:14px 14px 0}
-.chat-area::-webkit-scrollbar{display:none}
+.chat-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:14px 14px calc(80px + 58px + var(--safe-bot))}
 .chat-area::-webkit-scrollbar{display:none}
 .msg{margin-bottom:14px;display:flex;gap:10px;align-items:flex-end}
 .msg.user{flex-direction:row-reverse}
@@ -177,7 +176,17 @@ body{font-family:'DM Mono',monospace;color:var(--text);overscroll-behavior:none}
 .td{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:tdot 1.4s infinite}
 .td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
 @keyframes tdot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
-.chat-inp-wrap{padding:12px 14px calc(58px + 14px + var(--safe-bot));flex-shrink:0;background:var(--bg);border-top:1px solid var(--bdr);display:flex;gap:10px;align-items:flex-end}
+.chat-inp-wrap{
+  position:fixed;bottom:calc(58px + var(--safe-bot));
+  left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;
+  padding:10px 14px 10px;
+  background:rgba(8,8,8,.97);
+  border-top:1px solid var(--bdr);
+  display:flex;gap:10px;align-items:flex-end;
+  z-index:40;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
 .chat-inp{flex:1;background:var(--bg2);border:1px solid var(--bdr2);border-radius:14px;padding:11px 13px;color:#fff;font-family:'DM Mono',monospace;font-size:14px;outline:none;resize:none;max-height:100px;line-height:1.5;transition:border-color .15s}
 .chat-inp:focus{border-color:rgba(255,59,59,.5)}
 .chat-inp::placeholder{color:var(--t4)}
