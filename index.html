@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#080808">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="GHOST">
+<meta name="description" content="Stop ghosting yourself. The AI accountability app that actually haunts you.">
+<meta property="og:title" content="GHOST — Stop ghosting yourself.">
+<meta property="og:description" content="AI-powered accountability. 4 roast levels. Zero toxic positivity.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/icons/icon-512.png">
+<title>GHOST — Stop ghosting yourself.</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="/icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080808;--bg2:#111;--bg3:#1a1a1a;--bg4:#242424;
+  --bdr:rgba(255,255,255,.08);--bdr2:rgba(255,255,255,.14);
+  --text:#f0f0f0;--t2:#888;--t3:#555;--t4:#333;
+  --red:#FF3B3B;--cyan:#00f0ff;--green:#39ff14;--gold:#ffd60a;
+  --safe-top:env(safe-area-inset-top,44px);--safe-bot:env(safe-area-inset-bottom,24px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'DM Mono',monospace;color:var(--text);overscroll-behavior:none}
+#app{height:100%;max-width:480px;margin:0 auto;position:relative;overflow:hidden;background:var(--bg)}
+.view{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;transform:translateX(24px)}
+.view.active{opacity:1;pointer-events:all;transform:translateX(0)}
+.view.exit{transform:translateX(-24px)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:calc(80px + var(--safe-bot))}
+.scroll::-webkit-scrollbar{display:none}
+.topbar{padding:calc(var(--safe-top) + 6px) 22px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--bdr)}
+.wm{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:#fff;position:relative;display:inline-block}
+.wm::before{content:'GHOST';position:absolute;left:2px;top:0;color:var(--red);opacity:.5;clip-path:inset(30% 0 40% 0)}
+.wm::after{content:'GHOST';position:absolute;left:-2px;top:1px;color:var(--cyan);opacity:.3;clip-path:inset(55% 0 20% 0)}
+.topbar-sub{font-size:9px;color:var(--t3);letter-spacing:2px;margin-top:2px}
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:calc(58px + var(--safe-bot));padding-bottom:var(--safe-bot);background:rgba(8,8,8,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-around;z-index:50}
+.nb{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 16px;border-radius:12px}
+.ni{font-size:18px;line-height:1}
+.nl{font-size:9px;color:var(--t4);letter-spacing:1px;transition:color .15s}
+.nb.active .nl{color:#fff}
+.slabel{font-size:9px;color:var(--t3);letter-spacing:2.5px;padding:0 20px;margin-bottom:10px}
+.btn-p{width:100%;background:#fff;color:var(--bg);border:none;border-radius:14px;padding:17px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;transition:transform .1s,opacity .15s}
+.btn-p:active{transform:scale(.98)}
+.btn-p:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-s{width:100%;background:transparent;border:1px solid var(--bdr2);color:var(--t3);border-radius:14px;padding:14px;font-size:12px;cursor:pointer;letter-spacing:1px;margin-top:10px;transition:border-color .15s}
+.btn-s:hover{border-color:#fff;color:#fff}
+
+/* ONBOARDING */
+#v-ob{justify-content:center;align-items:center;text-align:center;padding:36px 28px;background:var(--bg)}
+.ob-t{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;letter-spacing:2px;color:#fff;margin-bottom:12px;position:relative;display:block}
+.ob-t::before{content:'STOP GHOSTING YOURSELF.';position:absolute;left:2px;top:0;color:var(--red);opacity:.4;clip-path:inset(25% 0 45% 0);pointer-events:none}
+.ob-t::after{content:'STOP GHOSTING YOURSELF.';position:absolute;left:-2px;top:1px;color:var(--cyan);opacity:.22;clip-path:inset(60% 0 15% 0);pointer-events:none}
+.ob-sub{font-size:13px;color:var(--t2);line-height:1.8;margin-bottom:30px}
+.ob-pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:34px}
+.pill{background:var(--bg2);border:1px solid var(--bdr2);border-radius:20px;padding:7px 14px;font-size:11px;color:var(--t2)}
+.pill.hot{border-color:rgba(255,59,59,.4);color:var(--red);background:rgba(255,59,59,.06)}
+
+/* LOGIN */
+#v-login{justify-content:flex-end;background:var(--bg)}
+.login-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 28px 20px;text-align:center}
+.login-sheet{background:var(--bg2);border-radius:28px 28px 0 0;padding:28px 24px calc(40px + var(--safe-bot));border-top:1px solid var(--bdr2);flex-shrink:0}
+.lhandle{width:34px;height:3px;background:var(--bg4);border-radius:2px;margin:0 auto 24px}
+.ltitle{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:#fff;margin-bottom:6px}
+.lsub{font-size:11px;color:var(--t3);margin-bottom:22px;line-height:1.6;font-style:italic}
+.flabel{font-size:9px;color:var(--t3);letter-spacing:2px;margin-bottom:7px;display:block}
+.finput{background:var(--bg);border:1px solid var(--bdr2);border-radius:12px;padding:14px 16px;width:100%;color:#fff;font-family:'DM Mono',monospace;font-size:15px;outline:none;transition:border-color .15s;margin-bottom:14px}
+.finput:focus{border-color:#fff}
+.finput::placeholder{color:var(--t4)}
+.ferr{font-size:10px;color:var(--red);font-style:italic;margin:-8px 0 12px;display:none}
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0}
+.dline{flex:1;height:1px;background:var(--bdr)}
+.dtxt{font-size:10px;color:var(--t4);letter-spacing:1px}
+.btn-google{width:100%;background:var(--bg3);border:1px solid var(--bdr2);border-radius:12px;padding:14px;color:var(--t2);font-family:'DM Mono',monospace;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:border-color .15s}
+.btn-google:hover{border-color:#fff;color:#fff}
+.lswitch{font-size:11px;color:var(--t3);text-align:center;margin-top:14px;font-style:italic}
+.lswitch span{color:#fff;cursor:pointer;text-decoration:underline}
+
+/* ROAST LEVEL */
+#v-roast,#v-rl-change{background:var(--bg)}
+#v-roast{justify-content:center;align-items:center;padding:28px 22px}
+.rl-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:#fff;text-align:center;margin-bottom:6px;margin-top:16px}
+.rl-sub{font-size:12px;color:var(--t2);text-align:center;margin-bottom:26px;line-height:1.7;font-style:italic}
+.rl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-bottom:24px}
+.rl-card{border:1px solid var(--bdr);border-radius:18px;padding:16px 12px;cursor:pointer;transition:all .2s;text-align:center;background:var(--bg2)}
+.rl-card.selected{border-width:2px}
+.rl-card:active{transform:scale(.97)}
+.rl-emoji{font-size:28px;margin-bottom:8px;display:block}
+.rl-name{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:1px;margin-bottom:4px}
+.rl-desc{font-size:10px;color:var(--t3);line-height:1.5}
+.rl-preview{font-size:10px;font-style:italic;margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr);line-height:1.4;opacity:.7}
+.soft .rl-name{color:#39ff14}.soft.selected{border-color:#39ff14;background:rgba(57,255,20,.05)}.soft .rl-preview{color:#39ff14}
+.medium .rl-name{color:var(--gold)}.medium.selected{border-color:var(--gold);background:rgba(255,214,10,.05)}.medium .rl-preview{color:var(--gold)}
+.hard .rl-name{color:#ff9500}.hard.selected{border-color:#ff9500;background:rgba(255,149,0,.05)}.hard .rl-preview{color:#ff9500}
+.brutal .rl-name{color:var(--red)}.brutal.selected{border-color:var(--red);background:rgba(255,59,59,.05)}.brutal .rl-preview{color:var(--red)}
+
+/* HOME */
+.streak-card{margin:0 20px 20px;background:var(--bg2);border:1px solid var(--bdr);border-radius:20px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;position:relative;overflow:hidden}
+.streak-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#fff,var(--red))}
+.snum{font-family:'Bebas Neue',sans-serif;font-size:52px;color:#fff;line-height:1;position:relative}
+.snum::before{content:attr(data-v);position:absolute;left:3px;top:0;color:var(--red);opacity:.5;clip-path:inset(20% 0 50% 0);pointer-events:none}
+.snum::after{content:attr(data-v);position:absolute;left:-2px;top:2px;color:var(--cyan);opacity:.3;clip-path:inset(60% 0 10% 0);pointer-events:none}
+.sunit{font-size:9px;color:var(--t3);letter-spacing:2px;margin-top:3px}
+.smsg{font-size:11px;color:var(--t3);font-style:italic;max-width:155px;text-align:right;line-height:1.6}
+.rl-badge{font-size:9px;padding:3px 10px;border-radius:10px;border:1px solid;letter-spacing:1px;cursor:pointer}
+.goal-card{margin:0 20px 10px;background:var(--bg2);border:1px solid var(--bdr);border-radius:18px;padding:17px 18px;cursor:pointer;transition:transform .1s;position:relative;overflow:hidden}
+.goal-card:active{transform:scale(.975)}
+.goal-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.gc0::before{background:#fff}.gc1::before{background:var(--red)}.gc2::before{background:var(--cyan)}.gc3::before{background:var(--green)}.gc4::before{background:#bf5af2}
+.gc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:11px}
+.gc-name{font-size:14px;font-weight:500;line-height:1.4;flex:1;color:#fff}
+.gc-badge{font-size:9px;padding:3px 10px;border-radius:10px;white-space:nowrap;flex-shrink:0;letter-spacing:1px}
+.ba{background:rgba(255,59,59,.1);color:var(--red);border:1px solid rgba(255,59,59,.3)}
+.bd{background:rgba(57,255,20,.1);color:var(--green);border:1px solid rgba(57,255,20,.3)}
+.mini-bar{background:var(--bg4);height:3px;border-radius:2px;overflow:hidden;margin-bottom:7px}
+.mini-fill{height:100%;border-radius:2px;transition:width .5s}
+.gc-meta{font-size:10px;color:var(--t3)}
+.add-card{margin:0 20px 10px;background:transparent;border:1px dashed var(--bg4);border-radius:18px;padding:17px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;font-size:12px;color:var(--t4);transition:border-color .15s,color .15s;width:calc(100% - 40px)}
+.add-card:active{border-color:#fff;color:#fff}
+.add-plus{width:34px;height:34px;border-radius:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--t3);flex-shrink:0}
+
+/* DETAIL */
+.det-hdr{padding:calc(var(--safe-top) + 6px) 22px 16px;flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--bdr)}
+.back-btn{background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:6px;letter-spacing:1px;font-family:'DM Mono',monospace;transition:color .15s}
+.back-btn:hover{color:#fff}
+.det-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#fff;line-height:1.1;margin-bottom:8px}
+.det-roast{font-size:11px;color:var(--red);font-style:italic;line-height:1.6;min-height:18px}
+.prog-wrap{padding:14px 22px;flex-shrink:0;border-bottom:1px solid var(--bdr)}
+.prog-row{display:flex;justify-content:space-between;margin-bottom:8px}
+.plbl{font-size:9px;color:var(--t3);letter-spacing:2px}
+.ppct{font-size:10px;letter-spacing:1px}
+.prog-bar{background:var(--bg3);height:5px;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;background:#fff;transition:width .5s cubic-bezier(.4,0,.2,1);position:relative}
+.prog-fill::after{content:'';position:absolute;right:0;top:0;bottom:0;width:6px;background:var(--cyan);opacity:.8;filter:blur(2px)}
+.steps-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:14px 20px calc(80px + var(--safe-bot))}
+.steps-scroll::-webkit-scrollbar{display:none}
+.step-item{background:var(--bg2);border:1px solid var(--bdr);border-radius:14px;padding:15px;margin-bottom:9px;cursor:pointer;transition:transform .1s,opacity .2s;display:flex;gap:13px;align-items:flex-start}
+.step-item:active{transform:scale(.98)}
+.step-item.done{opacity:.36}
+.scb{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--bg4);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .2s;background:var(--bg3)}
+.scb.on{background:#fff;border-color:#fff}
+.stitle{font-size:13px;font-weight:500;color:#fff;line-height:1.4;margin-bottom:4px}
+.step-item.done .stitle{text-decoration:line-through;color:var(--t4)}
+.sdetail{font-size:11px;color:var(--t3);line-height:1.6}
+.sroast{font-size:10px;color:var(--t4);font-style:italic;margin-top:5px}
+.shimmer{background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:sh 1.5s infinite;border-radius:6px;height:12px;margin-bottom:5px}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ROASTMASTER */
+#v-roastmaster{background:var(--bg)}
+.rm-header{padding:calc(var(--safe-top) + 6px) 22px 14px;flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:14px}
+.rm-avatar{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#1a0000,#2a0505);border:1px solid rgba(255,59,59,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;position:relative}
+.rm-online{position:absolute;bottom:2px;right:2px;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid var(--bg);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.rm-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:#fff;line-height:1}
+.rm-status{font-size:10px;color:var(--green);letter-spacing:1px;margin-top:2px}
+.rm-ctx{padding:10px 16px;background:rgba(255,59,59,.04);border-bottom:1px solid rgba(255,59,59,.1);display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.rm-ctx::-webkit-scrollbar{display:none}
+.ctx-pill{font-size:10px;color:var(--red);letter-spacing:.5px;white-space:nowrap;opacity:.7}
+.chat-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:14px 14px 0}
+.chat-area::-webkit-scrollbar{display:none}
+.msg{margin-bottom:14px;display:flex;gap:10px;align-items:flex-end}
+.msg.user{flex-direction:row-reverse}
+.msg-bubble{max-width:78%;padding:12px 14px;border-radius:18px;font-size:13px;line-height:1.6}
+.msg.bot .msg-bubble{background:var(--bg2);border:1px solid var(--bdr);color:var(--text);border-bottom-left-radius:4px}
+.msg.user .msg-bubble{background:#fff;color:var(--bg);border-bottom-right-radius:4px}
+.msg-av{width:28px;height:28px;border-radius:10px;background:linear-gradient(135deg,#1a0000,#2a0505);border:1px solid rgba(255,59,59,.3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.typing{display:flex;gap:4px;align-items:center;padding:12px 14px;background:var(--bg2);border:1px solid var(--bdr);border-radius:18px;border-bottom-left-radius:4px;width:60px}
+.td{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:tdot 1.4s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.chat-inp-wrap{padding:12px 14px calc(14px + var(--safe-bot));flex-shrink:0;background:var(--bg);border-top:1px solid var(--bdr);display:flex;gap:10px;align-items:flex-end}
+.chat-inp{flex:1;background:var(--bg2);border:1px solid var(--bdr2);border-radius:14px;padding:11px 13px;color:#fff;font-family:'DM Mono',monospace;font-size:14px;outline:none;resize:none;max-height:100px;line-height:1.5;transition:border-color .15s}
+.chat-inp:focus{border-color:rgba(255,59,59,.5)}
+.chat-inp::placeholder{color:var(--t4)}
+.chat-send{width:40px;height:40px;background:var(--red);border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .1s}
+.chat-send:active{transform:scale(.92)}
+.chat-send:disabled{background:var(--bg3);cursor:not-allowed}
+
+/* STATS + SHAME CARD */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px;margin-bottom:22px}
+.stat-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:16px;padding:16px}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:-1px;line-height:1;position:relative;display:inline-block}
+.stat-num::before{content:attr(data-v);position:absolute;left:2px;top:0;opacity:.5;clip-path:inset(25% 0 45% 0);pointer-events:none}
+.stat-lbl{font-size:9px;color:var(--t3);letter-spacing:2px;margin-top:4px}
+.pro-banner{margin:0 20px 20px;background:var(--bg2);border:1px solid var(--bdr2);border-radius:18px;padding:20px;cursor:pointer;position:relative;overflow:hidden}
+.pro-banner::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--red),var(--cyan))}
+.pro-tag{font-size:9px;color:var(--red);letter-spacing:3px;margin-bottom:6px}
+.pro-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:#fff;margin-bottom:4px}
+.pro-sub{font-size:11px;color:var(--t3);line-height:1.5}
+.shame-wrap{margin:0 20px 20px;background:var(--bg2);border:1px solid var(--bdr);border-radius:20px;overflow:hidden}
+.shame-inner{padding:20px}
+.sc-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.sc-logo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:#fff;position:relative;display:inline-block}
+.sc-logo::before{content:'GHOST';position:absolute;left:1px;top:0;color:var(--red);opacity:.45;clip-path:inset(30% 0 40% 0)}
+.sc-date{font-size:9px;color:var(--t3);letter-spacing:1px}
+.sc-title{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:1px;color:#fff;margin-bottom:3px;line-height:1}
+.sc-sub{font-size:9px;color:var(--t3);letter-spacing:1px;margin-bottom:16px}
+.sc-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.sc-stat{background:var(--bg3);border-radius:10px;padding:10px}
+.sc-stat-n{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:-1px;line-height:1}
+.sc-stat-l{font-size:9px;color:var(--t3);letter-spacing:1px;margin-top:2px}
+.sc-verdict{font-size:12px;font-style:italic;color:var(--red);line-height:1.6;padding-top:12px;border-top:1px solid var(--bdr);min-height:36px}
+.sc-share{width:100%;background:transparent;border:1px solid var(--bdr2);border-radius:11px;padding:11px;color:var(--t2);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color .15s,color .15s}
+.sc-share:hover{border-color:#fff;color:#fff}
+.rlog-item{font-size:11px;color:var(--t3);font-style:italic;padding:11px 0;border-bottom:1px solid var(--bdr);line-height:1.6}
+.rlog-item:last-child{border-bottom:none}
+
+/* PROFILE */
+.prof-hdr{padding:calc(var(--safe-top) + 6px) 22px 20px;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.prof-av{width:64px;height:64px;border-radius:50%;background:var(--bg2);border:1px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px}
+.prof-name{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;color:#fff;margin-bottom:2px}
+.prof-email{font-size:11px;color:var(--t3)}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--bdr);cursor:pointer}
+.srow-lbl{font-size:13px;color:#fff}
+.sval{font-size:11px;color:var(--t3);display:flex;align-items:center;gap:6px}
+.sarr{color:var(--t4);font-size:14px}
+
+/* CONFIRM DIALOG (replaces native confirm()) */
+#confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:500;display:none;align-items:center;justify-content:center;padding:24px}
+#confirm-overlay.open{display:flex}
+.confirm-box{background:var(--bg2);border:1px solid var(--bdr2);border-radius:20px;padding:24px;width:100%;max-width:320px;text-align:center}
+.confirm-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:#fff;margin-bottom:8px}
+.confirm-sub{font-size:12px;color:var(--t3);margin-bottom:22px;line-height:1.6}
+.confirm-row{display:flex;gap:10px}
+.confirm-no{flex:1;background:var(--bg3);color:var(--t3);border:none;border-radius:12px;padding:14px;font-family:'DM Mono',monospace;font-size:13px;cursor:pointer}
+.confirm-yes{flex:1;background:var(--red);color:#fff;border:none;border-radius:12px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer}
+
+/* PAYWALL */
+#v-pw{padding:calc(var(--safe-top) + 10px) 22px calc(40px + var(--safe-bot));overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg)}
+.pw-close{background:var(--bg2);border:1px solid var(--bdr);border-radius:50%;width:34px;height:34px;color:var(--t3);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:26px}
+.pw-badge{background:rgba(255,59,59,.08);border:1px solid rgba(255,59,59,.25);color:var(--red);font-size:9px;letter-spacing:3px;padding:5px 14px;border-radius:20px;display:inline-block;margin-bottom:16px}
+.pw-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;line-height:1.1;color:#fff;margin-bottom:10px}
+.pw-sub{font-size:12px;color:var(--t3);margin-bottom:26px;line-height:1.8;font-style:italic}
+.feat-row{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+.feat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:var(--bg2);border:1px solid var(--bdr)}
+.feat-title{font-size:13px;font-weight:500;color:#fff;margin-bottom:2px}
+.feat-desc{font-size:11px;color:var(--t3);line-height:1.5}
+.price-card{background:var(--bg2);border:1px solid var(--bdr2);border-radius:18px;padding:20px;margin:22px 0 16px;display:flex;justify-content:space-between;align-items:center}
+.pm{font-family:'Bebas Neue',sans-serif;font-size:40px;color:#fff;line-height:1;position:relative;display:inline-block}
+.pm::before{content:attr(data-v);position:absolute;left:3px;top:0;color:var(--red);opacity:.45;clip-path:inset(20% 0 50% 0)}
+.pm::after{content:attr(data-v);position:absolute;left:-2px;top:2px;color:var(--cyan);opacity:.3;clip-path:inset(60% 0 10% 0)}
+.pp{font-size:11px;color:var(--t3);margin-top:4px}
+.pn{font-size:11px;color:var(--t3);text-align:right;line-height:1.7}
+.pw-terms{font-size:10px;color:var(--t4);text-align:center;margin-top:12px;line-height:1.7;font-style:italic}
+
+/* MODAL */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;flex-direction:column;justify-content:flex-end;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s;max-width:480px;left:50%;transform:translateX(-50%)}
+#modal.open{opacity:1;pointer-events:all}
+.msheet{background:var(--bg2);border-radius:26px 26px 0 0;padding:26px 22px calc(30px + var(--safe-bot));border-top:1px solid var(--bdr2);transform:translateY(40px);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+#modal.open .msheet{transform:translateY(0)}
+.mhandle{width:34px;height:3px;background:var(--bg4);border-radius:2px;margin:0 auto 22px}
+.mtitle{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:#fff;margin-bottom:6px}
+.msub{font-size:11px;color:var(--t3);margin-bottom:22px;line-height:1.7;font-style:italic}
+.minput{background:var(--bg);border:1px solid var(--bdr2);border-radius:12px;padding:15px;width:100%;color:#fff;font-family:'DM Mono',monospace;font-size:15px;margin-bottom:14px;outline:none;transition:border-color .15s}
+.minput:focus{border-color:#fff}
+.minput::placeholder{color:var(--t4)}
+.mgen{font-size:11px;color:var(--t3);font-style:italic;margin-bottom:14px;text-align:center;display:none}
+.mrow{display:flex;gap:10px}
+.mcancel{flex:1;background:var(--bg3);color:var(--t3);border:none;border-radius:12px;padding:15px;font-family:'DM Mono',monospace;font-size:13px;cursor:pointer}
+.msubmit{flex:2;background:#fff;color:var(--bg);border:none;border-radius:12px;padding:15px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;cursor:pointer;transition:transform .1s,opacity .15s}
+.msubmit:active{transform:scale(.98)}
+.msubmit:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* TOAST */
+#toast{position:fixed;bottom:calc(66px + var(--safe-bot));left:50%;transform:translateX(-50%) translateY(8px);width:calc(100% - 40px);max-width:440px;background:var(--bg2);border:1px solid var(--bdr2);border-left:3px solid var(--red);border-radius:12px;padding:12px 16px;font-size:12px;color:var(--red);font-style:italic;z-index:300;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s,transform .25s}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* OFFLINE BANNER */
+#offline-bar{display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#1a0800;border-bottom:1px solid rgba(255,149,0,.3);padding:10px 20px;font-size:11px;color:#ff9500;text-align:center;z-index:400;letter-spacing:.5px}
+.empty{text-align:center;padding:40px 24px;color:var(--t4);font-size:12px;line-height:2;font-style:italic}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="offline-bar">👻 Ghost is offline. Your progress is saved locally.</div>
+
+<!-- ONBOARDING -->
+<div class="view active" id="v-ob">
+  <svg width="90" height="90" viewBox="0 0 90 90" style="margin-bottom:22px">
+    <path d="M45 12C30 12 20 23 20 36L20 74C20 75.4 21.8 76.1 22.8 75.1L28 70.5L33.2 75C34.2 75.9 35.8 75.9 36.8 75L42 70.5L47.2 75C48.2 75.9 49.8 75.9 50.8 75L56 70.5L61.2 75C62.2 75.9 64 75.2 64 73.8L64 36C64 23 62 12 45 12Z" fill="#00f0ff" opacity=".28" transform="translate(-3,1)"/>
+    <path d="M45 12C30 12 20 23 20 36L20 74C20 75.4 21.8 76.1 22.8 75.1L28 70.5L33.2 75C34.2 75.9 35.8 75.9 36.8 75L42 70.5L47.2 75C48.2 75.9 49.8 75.9 50.8 75L56 70.5L61.2 75C62.2 75.9 64 75.2 64 73.8L64 36C64 23 62 12 45 12Z" fill="#FF3B3B" opacity=".38" transform="translate(3,0)"/>
+    <path d="M45 12C30 12 20 23 20 36L20 74C20 75.4 21.8 76.1 22.8 75.1L28 70.5L33.2 75C34.2 75.9 35.8 75.9 36.8 75L42 70.5L47.2 75C48.2 75.9 49.8 75.9 50.8 75L56 70.5L61.2 75C62.2 75.9 64 75.2 64 73.8L64 36C64 23 62 12 45 12Z" fill="white"/>
+    <line x1="36" y1="33" x2="43" y2="40" stroke="#080808" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="43" y1="33" x2="36" y2="40" stroke="#080808" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="49" y1="33" x2="56" y2="40" stroke="#080808" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="56" y1="33" x2="49" y2="40" stroke="#080808" stroke-width="3.5" stroke-linecap="round"/>
+    <rect x="20" y="52" width="26" height="2" fill="#FF3B3B" opacity=".55"/>
+    <rect x="38" y="60" width="18" height="1.5" fill="#00f0ff" opacity=".5"/>
+  </svg>
+  <div class="ob-t">STOP GHOSTING YOURSELF.</div>
+  <div class="ob-sub">AI accountability that actually haunts you.<br>Unique roasts every time. Zero generic advice.</div>
+  <div class="ob-pills">
+    <div class="pill hot">Claude AI roasts</div>
+    <div class="pill hot">Zero toxic positivity</div>
+    <div class="pill">4 roast levels</div>
+    <div class="pill">Free to start</div>
+  </div>
+  <button class="btn-p" onclick="G('v-login','')" style="width:100%;margin-bottom:12px">LET'S GO →</button>
+  <button class="btn-s" onclick="G('v-login','')">I'm already motivated (doubt it)</button>
+</div>
+
+<!-- LOGIN -->
+<div class="view" id="v-login">
+  <div class="login-top">
+    <svg width="50" height="50" viewBox="0 0 50 50" style="margin-bottom:16px">
+      <path d="M25 5C17 5 11 12 11 20L11 42C11 43 12 43.5 12.7 42.8L15.3 40L17.9 42.7C18.6 43.3 19.5 43.3 20.2 42.7L22.8 40L25.4 42.7C26.1 43.3 27 43.3 27.7 42.7L30.3 40L32.9 42.7C33.6 43.3 34.6 43 34.6 42L34.6 20C34.6 12 33.6 5 25 5Z" fill="#FF3B3B" opacity=".35" transform="translate(2,0)"/>
+      <path d="M25 5C17 5 11 12 11 20L11 42C11 43 12 43.5 12.7 42.8L15.3 40L17.9 42.7C18.6 43.3 19.5 43.3 20.2 42.7L22.8 40L25.4 42.7C26.1 43.3 27 43.3 27.7 42.7L30.3 40L32.9 42.7C33.6 43.3 34.6 43 34.6 42L34.6 20C34.6 12 33.6 5 25 5Z" fill="white"/>
+      <line x1="19" y1="19" x2="23" y2="23" stroke="#080808" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="23" y1="19" x2="19" y2="23" stroke="#080808" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="27" y1="19" x2="31" y2="23" stroke="#080808" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="31" y1="19" x2="27" y2="23" stroke="#080808" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:#fff;margin-bottom:6px" id="lhead">CREATE ACCOUNT</div>
+    <div style="font-size:11px;color:var(--t3);font-style:italic" id="lhead-sub">// Join and stop haunting your own potential.</div>
+  </div>
+  <div class="login-sheet">
+    <div class="lhandle"></div>
+    <div id="form-su">
+      <div class="ltitle">CREATE ACCOUNT</div>
+      <div class="lsub">// No excuses after this. You're officially on record.</div>
+      <label class="flabel">YOUR NAME</label>
+      <input class="finput" id="f-name" placeholder="First name" autocomplete="given-name" maxlength="50"/>
+      <div class="ferr" id="e-name">// We need something to haunt you by.</div>
+      <label class="flabel">EMAIL ADDRESS</label>
+      <input class="finput" id="f-email" placeholder="you@example.com" type="email" autocomplete="email" maxlength="200"/>
+      <div class="ferr" id="e-email">// That doesn't look like an email.</div>
+      <label class="flabel">PASSWORD</label>
+      <input class="finput" id="f-pass" placeholder="Min. 6 characters" type="password" maxlength="200"/>
+      <div class="ferr" id="e-pass">// At least 6 characters. Come on.</div>
+      <button class="btn-p" onclick="doSignup()" style="width:100%">CREATE ACCOUNT →</button>
+      <div class="divider"><div class="dline"></div><div class="dtxt">OR</div><div class="dline"></div></div>
+      <button class="btn-google" onclick="doGoogle()">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+      <div class="lswitch">Already haunting? <span onclick="toggleMode()">Sign in</span></div>
+    </div>
+    <div id="form-si" style="display:none">
+      <div class="ltitle">SIGN IN</div>
+      <div class="lsub">// Your goals are still waiting. Unlike you.</div>
+      <label class="flabel">EMAIL ADDRESS</label>
+      <input class="finput" id="si-email" placeholder="you@example.com" type="email" maxlength="200"/>
+      <div class="ferr" id="e-si">// That doesn't look right.</div>
+      <label class="flabel">PASSWORD</label>
+      <input class="finput" id="si-pass" placeholder="Password" type="password" maxlength="200"/>
+      <div class="ferr" id="e-sip">// Wrong password. Classic.</div>
+      <button class="btn-p" onclick="doSignin()" style="width:100%">SIGN IN →</button>
+      <div class="divider"><div class="dline"></div><div class="dtxt">OR</div><div class="dline"></div></div>
+      <button class="btn-google" onclick="doGoogle()">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+      <div class="lswitch">New here? <span onclick="toggleMode()">Create account</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ROAST LEVEL -->
+<div class="view" id="v-roast">
+  <svg width="48" height="48" viewBox="0 0 48 48"><path d="M24 5C16 5 10 12 10 20L10 41C10 42 11 42.4 11.6 41.8L14.1 39.2L16.7 41.7C17.3 42.3 18.2 42.3 18.8 41.7L21.4 39.2L24 41.7C24.6 42.3 25.5 42.3 26.1 41.7L28.7 39.2L31.3 41.7C31.9 42.3 32.9 41.9 32.9 41L32.9 20C32.9 12 32 5 24 5Z" fill="white"/><line x1="18" y1="19" x2="22" y2="23" stroke="#080808" stroke-width="2.2" stroke-linecap="round"/><line x1="22" y1="19" x2="18" y2="23" stroke="#080808" stroke-width="2.2" stroke-linecap="round"/><line x1="26" y1="19" x2="30" y2="23" stroke="#080808" stroke-width="2.2" stroke-linecap="round"/><line x1="30" y1="19" x2="26" y2="23" stroke="#080808" stroke-width="2.2" stroke-linecap="round"/></svg>
+  <div class="rl-title">SET YOUR ROAST LEVEL.</div>
+  <div class="rl-sub">How hard should Ghost come for you?<br>// Claude generates unique roasts at every level.</div>
+  <div class="rl-grid">
+    <div class="rl-card soft" id="rl-soft" onclick="pickRL('soft')"><span class="rl-emoji">🌱</span><div class="rl-name">SOFT</div><div class="rl-desc">Warm. Honest. Won't destroy you.</div><div class="rl-preview">"You might want to look at this when you get a chance."</div></div>
+    <div class="rl-card medium" id="rl-medium" onclick="pickRL('medium')"><span class="rl-emoji">👀</span><div class="rl-name">MEDIUM</div><div class="rl-desc">Honest. Sarcastic. You'll feel it.</div><div class="rl-preview">"9 days of nothing. That's a choice I guess."</div></div>
+    <div class="rl-card hard" id="rl-hard" onclick="pickRL('hard')"><span class="rl-emoji">🔥</span><div class="rl-name">HARD</div><div class="rl-desc">No mercy. No softening. Specific.</div><div class="rl-preview">"Zero steps done. You're not even trying."</div></div>
+    <div class="rl-card brutal" id="rl-brutal" onclick="pickRL('brutal')"><span class="rl-emoji">💀</span><div class="rl-name">BRUTAL</div><div class="rl-desc">Scorched earth. You asked for this.</div><div class="rl-preview">"A monument to wasted potential. Fix it."</div></div>
+  </div>
+  <button class="btn-p" id="rl-cta" onclick="confirmRL()" style="width:100%" disabled>SELECT A LEVEL FIRST</button>
+</div>
+
+<!-- HOME -->
+<div class="view" id="v-home">
+  <div class="topbar">
+    <div><div class="wm">GHOST</div><div class="topbar-sub" id="home-sub">// WHAT ARE YOU AVOIDING TODAY</div></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="rl-badge" id="rl-badge" onclick="navTo('v-profile','nb-profile')" role="button" aria-label="Change roast level"></div>
+      <svg width="32" height="32" viewBox="0 0 32 32" style="cursor:pointer;flex-shrink:0" onclick="navTo('v-profile','nb-profile')" role="button" aria-label="Profile">
+        <circle cx="16" cy="16" r="16" fill="var(--bg2)"/><circle cx="16" cy="16" r="15" fill="none" stroke="var(--bdr2)" stroke-width="1"/>
+        <circle cx="16" cy="11" r="5" fill="var(--t2)"/><ellipse cx="16" cy="24" rx="8" ry="5.5" fill="var(--t2)"/>
+      </svg>
+    </div>
+  </div>
+  <div class="scroll">
+    <div style="height:16px"></div>
+    <div class="slabel">MOMENTUM</div>
+    <div class="streak-card">
+      <div><div class="snum" id="snum" data-v="0">0</div><div class="sunit">DAY STREAK</div></div>
+      <div class="smsg" id="smsg">"Nothing yet. Classic ghost behaviour."</div>
+    </div>
+    <div class="slabel">YOUR HAUNTINGS</div>
+    <div id="goals-list"></div>
+    <button class="add-card" onclick="openModal()">
+      <div class="add-plus">+</div>Add something you'll probably ghost
+    </button>
+    <div style="height:10px"></div>
+  </div>
+</div>
+
+<!-- GOAL DETAIL -->
+<div class="view" id="v-det">
+  <div class="det-hdr">
+    <button class="back-btn" onclick="goBack()">← GOALS</button>
+    <div class="det-title" id="det-title"></div>
+    <div class="det-roast" id="det-roast"></div>
+  </div>
+  <div class="prog-wrap">
+    <div class="prog-row"><span class="plbl">PROGRESS</span><span class="ppct" id="det-pct" style="color:#fff">0/0 — 0%</span></div>
+    <div class="prog-bar"><div class="prog-fill" id="det-fill" style="width:0%"></div></div>
+  </div>
+  <div class="steps-scroll" id="steps-scroll"></div>
+</div>
+
+<!-- ROASTMASTER -->
+<div class="view" id="v-roastmaster" style="display:flex;flex-direction:column">
+  <!-- Header — always visible -->
+  <div class="rm-header">
+    <div class="rm-avatar">🤖<div class="rm-online"></div></div>
+    <div style="flex:1">
+      <div class="rm-name">ROASTMASTER</div>
+      <div class="rm-status" id="rm-status">ONLINE — READY TO JUDGE YOU</div>
+    </div>
+    <!-- Free tier message counter -->
+    <div id="rm-msg-counter" style="display:none;font-size:10px;font-family:'DM Mono',monospace;color:var(--t3);text-align:right;line-height:1.4">
+      <span id="rm-msg-left">3</span> free<br>messages
+    </div>
+  </div>
+
+  <!-- Chat — always shown, input locked after free limit -->
+  <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div class="rm-ctx" id="rm-ctx"></div>
+    <div class="chat-area" id="chat-area" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 0;scrollbar-width:none"></div>
+
+    <!-- Pro upsell banner — shown after free messages used -->
+    <div id="rm-upsell" style="display:none;margin:0 14px 12px;background:rgba(255,59,59,.08);border:1px solid rgba(255,59,59,.25);border-radius:14px;padding:14px;text-align:center">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:#fff;margin-bottom:4px">UNLOCK FULL ACCESS</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5;font-style:italic">The Roastmaster remembers everything.<br>Unlimited coaching. $4.99/mo.</div>
+      <button class="btn-p" onclick="G('v-pw','')" style="width:100%;padding:13px;font-size:15px">UNLOCK ROASTMASTER →</button>
+    </div>
+
+    <!-- Input area -->
+    <div class="chat-inp-wrap" id="rm-inp-wrap">
+      <textarea class="chat-inp" id="chat-inp" placeholder="Type your message, hit Enter or tap send..." rows="1" maxlength="500"></textarea>
+      <button class="chat-send" id="chat-send" onclick="sendMsg()" aria-label="Send">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path d="M16.5 1.5L8.25 9.75M16.5 1.5L11.25 16.5L8.25 9.75L1.5 6.75L16.5 1.5Z" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="view" id="v-stats">
+  <div class="topbar"><div><div class="wm">GHOST</div><div class="topbar-sub">// YOUR NUMBERS</div></div></div>
+  <div class="scroll">
+    <div style="height:16px"></div>
+    <div class="pro-banner" id="pro-banner" onclick="G('v-pw','')">
+      <div class="pro-tag">GHOST PRO</div>
+      <div class="pro-title">UNLOCK ROASTMASTER + AI</div>
+      <div class="pro-sub">Custom AI steps, Roastmaster coach, Shame Card, unlimited goals → $4.99/mo</div>
+    </div>
+    <div class="slabel">BY THE NUMBERS</div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-num" id="s-goals" data-v="0" style="color:#fff">0</div><div class="stat-lbl">GOALS CREATED</div></div>
+      <div class="stat-box"><div class="stat-num" id="s-steps" data-v="0" style="color:var(--red)">0</div><div class="stat-lbl">STEPS DONE</div></div>
+      <div class="stat-box"><div class="stat-num" id="s-crushed" data-v="0" style="color:var(--green)">0</div><div class="stat-lbl">GOALS CRUSHED</div></div>
+      <div class="stat-box"><div class="stat-num" id="s-streak" data-v="0" style="color:var(--cyan)">0</div><div class="stat-lbl">DAY STREAK</div></div>
+    </div>
+    <div class="slabel">WEEKLY SHAME CARD</div>
+    <div class="shame-wrap">
+      <div class="shame-inner">
+        <div class="sc-hdr"><div class="sc-logo">GHOST</div><div class="sc-date" id="sc-date"></div></div>
+        <div class="sc-title">THIS WEEK IN SELF-SABOTAGE</div>
+        <div class="sc-sub" id="sc-range">WEEK OVERVIEW</div>
+        <div class="sc-stats" id="sc-stats"></div>
+        <div class="sc-verdict" id="sc-verdict">// Generating your weekly roast...</div>
+      </div>
+      <div style="padding:0 20px 18px">
+        <button class="sc-share" onclick="shareCard()">📸 Share your shame</button>
+      </div>
+    </div>
+    <div class="slabel">HAUNTING HISTORY</div>
+    <div id="rlog" style="padding:0 20px"><div class="rlog-item">// Complete steps to unlock your history.</div></div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div class="view" id="v-profile">
+  <div class="topbar"><div><div class="wm">GHOST</div><div class="topbar-sub">// YOUR ACCOUNT</div></div></div>
+  <div class="scroll">
+    <div class="prof-hdr">
+      <div class="prof-av">👻</div>
+      <div class="prof-name" id="prof-name">—</div>
+      <div class="prof-email" id="prof-email">—</div>
+    </div>
+    <div style="height:8px"></div>
+    <div class="slabel">SETTINGS</div>
+    <div class="srow" onclick="G('v-rl-change','')"><div class="srow-lbl">Roast Level</div><div class="sval"><span id="prof-rl">—</span><span class="sarr">›</span></div></div>
+    <div class="srow" onclick="G('v-pw','')"><div class="srow-lbl">Upgrade to Pro</div><div class="sval" id="prof-pro"><span style="color:var(--red)">Free plan</span><span class="sarr">›</span></div></div>
+    <div class="srow" onclick="confirmSignout()"><div class="srow-lbl" style="color:var(--red)">Sign Out</div><div class="sval"><span class="sarr" style="color:var(--red)">›</span></div></div>
+  </div>
+</div>
+
+<!-- ROAST LEVEL CHANGE -->
+<div class="view" id="v-rl-change">
+  <div class="topbar" style="border-bottom:1px solid var(--bdr)">
+    <button class="back-btn" onclick="goBack()" style="margin:0">← BACK</button>
+    <div class="wm">GHOST</div>
+  </div>
+  <div class="scroll" style="padding:24px 20px calc(80px + var(--safe-bot))">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:#fff;margin-bottom:6px">CHANGE ROAST LEVEL</div>
+    <div style="font-size:11px;color:var(--t3);font-style:italic;margin-bottom:22px;line-height:1.7">// Claude generates unique roasts based on your real data. This controls the tone.</div>
+    <div class="rl-grid">
+      <div class="rl-card soft" id="rc-soft" onclick="pickRLC('soft')"><span class="rl-emoji">🌱</span><div class="rl-name">SOFT</div><div class="rl-desc">Warm. Honest.</div><div class="rl-preview">"You might want to look at this."</div></div>
+      <div class="rl-card medium" id="rc-medium" onclick="pickRLC('medium')"><span class="rl-emoji">👀</span><div class="rl-name">MEDIUM</div><div class="rl-desc">Honest. A bit mean.</div><div class="rl-preview">"9 days of nothing. That's a choice."</div></div>
+      <div class="rl-card hard" id="rc-hard" onclick="pickRLC('hard')"><span class="rl-emoji">🔥</span><div class="rl-name">HARD</div><div class="rl-desc">No mercy.</div><div class="rl-preview">"Zero steps. Not even trying."</div></div>
+      <div class="rl-card brutal" id="rc-brutal" onclick="pickRLC('brutal')"><span class="rl-emoji">💀</span><div class="rl-name">BRUTAL</div><div class="rl-desc">Scorched earth.</div><div class="rl-preview">"Monument to wasted potential."</div></div>
+    </div>
+    <button class="btn-p" id="rc-cta" onclick="saveRLC()" style="width:100%;margin-top:8px">SAVE →</button>
+  </div>
+</div>
+
+<!-- PAYWALL -->
+<div class="view" id="v-pw">
+  <button class="pw-close" onclick="goBack()">✕</button>
+  <div class="pw-badge">GHOST PRO</div>
+  <div class="pw-title">UPGRADE YOUR HAUNTING.</div>
+  <div class="pw-sub">// The free tier shows you what's possible. Pro is what actually changes behaviour.</div>
+  <div class="feat-row"><div class="feat-icon">🤖</div><div><div class="feat-title">Roastmaster AI Coach</div><div class="feat-desc">Knows your goals, history, and excuses. Calls you out specifically. Never generically.</div></div></div>
+  <div class="feat-row"><div class="feat-icon">📸</div><div><div class="feat-title">Weekly Shame Card</div><div class="feat-desc">AI-generated shareable card every Sunday. Brutal. Beautiful. Built to be posted.</div></div></div>
+  <div class="feat-row"><div class="feat-icon">∞</div><div><div class="feat-title">Unlimited goals + AI steps</div><div class="feat-desc">Claude generates custom action steps for every goal you add.</div></div></div>
+  <div class="feat-row"><div class="feat-icon">👥</div><div><div class="feat-title">Ghost Circles (coming soon)</div><div class="feat-desc">Invite friends. Make failure public. Nothing works like social shame.</div></div></div>
+  <div class="feat-row"><div class="feat-icon">⚰️</div><div><div class="feat-title">Goal Autopsy (coming soon)</div><div class="feat-desc">When you abandon a goal, Ghost writes a formal cause-of-death report.</div></div></div>
+  <div class="price-card"><div><div class="pm" data-v="$4.99">$4.99</div><div class="pp">per month</div></div><div class="pn">Cancel anytime.<br>Your goals won't though.</div></div>
+  <button class="btn-p" onclick="unlockPro()" id="pw-cta">START 7-DAY FREE TRIAL</button>
+  <div class="pw-terms">// No charge until trial ends. We just hope the shame keeps you subscribed.</div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div id="nav" style="display:none">
+  <button class="nb active" id="nb-home" onclick="navTo('v-home','nb-home')"><div class="ni">👻</div><div class="nl">GOALS</div></button>
+  <button class="nb" id="nb-rm" onclick="navTo('v-roastmaster','nb-rm')"><div class="ni">🤖</div><div class="nl">COACH</div></button>
+  <button class="nb" id="nb-stats" onclick="navTo('v-stats','nb-stats')"><div class="ni">📊</div><div class="nl">STATS</div></button>
+  <button class="nb" id="nb-profile" onclick="navTo('v-profile','nb-profile')"><div class="ni">👤</div><div class="nl">PROFILE</div></button>
+</div>
+
+<!-- ADD MODAL -->
+<div id="modal">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mtitle">NEW HAUNTING.</div>
+    <div class="msub">// Write it down. Claude will generate a personalised plan.</div>
+    <input class="minput" id="goal-inp" placeholder="e.g. Run a 5K, learn Python, save $5000..." maxlength="80"/>
+    <div class="mgen" id="mgen">// Claude is generating your roast plan...</div>
+    <div class="mrow">
+      <button class="mcancel" id="mcancel" onclick="closeModal()">Cancel</button>
+      <button class="msubmit" id="msubmit" onclick="addGoal()">ADD GOAL</button>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOM CONFIRM DIALOG -->
+<div id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">SIGN OUT?</div>
+    <div class="confirm-sub" id="confirm-msg">You'll need to sign back in. Your data stays saved.</div>
+    <div class="confirm-row">
+      <button class="confirm-no" onclick="closeConfirm()">Cancel</button>
+      <button class="confirm-yes" id="confirm-yes" onclick="closeConfirm()">Do it</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+// SECURITY NOTES FOR PRODUCTION:
+// 1. ANTHROPIC_API_KEY must be set as an env variable in Vercel
+// 2. isPro is verified server-side via proToken (needs Stripe webhook in prod)
+// 3. Real auth needs Firebase Auth or Supabase (passwords never stored here)
+// 4. Set ANTHROPIC_API_KEY in Vercel environment variables
+// ═══════════════════════════════════════════════════════════
+
+// ── API PROXY ──────────────────────────────────────────────
+// Environment detection
+const IS_PROD = !['localhost', '127.0.0.1'].includes(window.location.hostname)
+  && !window.location.hostname.includes('claudeusercontent.com');
+
+// In production: all Claude calls go through /api/roast (keeps API key off client)
+// In sandbox/dev: call Anthropic directly with browser header (no API key needed in Claude sandbox)
+async function callClaude(messages, system, maxTokens = 300) {
+  try {
+    let res;
+    if (IS_PROD) {
+      // Production — use the secure server-side proxy
+      res = await fetch('/api/roast', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ messages, system, maxTokens }),
+      });
+    } else {
+      // Sandbox / dev — call Anthropic directly (Claude sandbox handles auth)
+      res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: maxTokens,
+          system: system || undefined,
+          messages,
+        }),
+      });
+      if (!res.ok) { console.warn('Claude API error', res.status); return null; }
+      const raw = await res.json();
+      return raw.content?.filter(b => b.type === 'text').map(b => b.text).join('') || null;
+    }
+    if (!res.ok) {
+      if (res.status === 429) { showToast('"Slow down. Ghost needs a moment to judge you."'); return null; }
+      console.warn('API error', res.status);
+      return null;
+    }
+    const data = await res.json();
+    return data.text || null;
+  } catch (e) {
+    showOffline(true);
+    return null;
+  }
+}
+
+// ── INPUT SANITIZATION ─────────────────────────────────────
+function sanitizeInput(s, maxLen = 80) {
+  if (typeof s !== 'string') return '';
+  return s
+    .slice(0, maxLen)
+    .replace(/[<>]/g, '') // strip HTML
+    .trim();
+}
+
+// ── USER CONTEXT (for Claude prompts) ─────────────────────
+function buildContext() {
+  const name = sanitizeInput(S.user?.name || 'User', 50);
+  const goals = S.goals.map(g => {
+    const done = g.steps.filter(s => s.done).length;
+    const pct = Math.round((done / g.steps.length) * 100);
+    // FIX: guard against missing lastActivity
+    const lastAct = g.lastActivity || g.created || Date.now();
+    const days = Math.floor((Date.now() - lastAct) / 86400000);
+    const goalName = sanitizeInput(g.name, 60);
+    return `"${goalName}" (${pct}% done, last active ${days}d ago)`;
+  });
+  return `User: ${name}. Streak: ${S.streak} days. Steps completed total: ${S.stepsDone}. Goals: ${goals.length ? goals.join('; ') : 'none yet'}.`;
+}
+
+function getTone(rl) {
+  const tones = {
+    soft: 'Be warm and encouraging but gently sarcastic. Like a supportive friend who quietly judges. Never cruel.',
+    medium: 'Be honest and mildly mean. Hard truths without sugar. Sarcastic but not cruel. You want them to succeed.',
+    hard: 'Be blunt, sharp, relentless. No softening. Call out patterns directly. You are not here to be nice.',
+    brutal: 'Be ruthless. Reference specific failures. No mercy, no encouragement. Channel Gordon Ramsay meets a disappointed parent.',
+  };
+  return tones[rl] || tones.medium;
+}
+
+// ── GENERATE GOAL ROASTS ───────────────────────────────────
+async function genGoalContent(goalName) {
+  const safe = sanitizeInput(goalName, 60);
+  if (!safe) return null;
+  const system = `You are GHOST, a brutally honest AI accountability app. ${getTone(S.rl)} Keep responses SHORT — under 25 words each. Never use hashtags. Always reference the specific goal.`;
+  const prompt = `${buildContext()}\n\nNew goal added: "${safe}"\n\nRespond with ONLY raw JSON (no markdown):\n{"intro":"roast under 25 words about this specific goal","stepRoasts":["under 15 words","under 15 words","under 15 words","under 15 words","under 15 words","under 15 words"]}`;
+  const raw = await callClaude([{ role: 'user', content: prompt }], system, 400);
+  if (!raw) return null;
+  try {
+    const m = raw.match(/\{[\s\S]*\}/);
+    return m ? JSON.parse(m[0]) : null;
+  } catch { return null; }
+}
+
+// ── GENERATE STEP DONE MSG ─────────────────────────────────
+async function genDoneMsg(goalName, stepTitle) {
+  const system = `You are GHOST. ${getTone(S.rl)} One sentence only, under 20 words. Reference the specific step.`;
+  const prompt = `${buildContext()}\nJust completed step "${sanitizeInput(stepTitle, 80)}" for goal "${sanitizeInput(goalName, 60)}". One-line reaction.`;
+  return await callClaude([{ role: 'user', content: prompt }], system, 60);
+}
+
+// ── GENERATE STREAK MSG ────────────────────────────────────
+async function genStreakMsg() {
+  if (!S.streak) return null;
+  const system = `You are GHOST. ${getTone(S.rl)} One sentence, under 20 words, about their ${S.streak}-day streak.`;
+  const prompt = `${buildContext()}\nReact to their ${S.streak}-day streak.`;
+  return await callClaude([{ role: 'user', content: prompt }], system, 60);
+}
+
+// ── GENERATE SHAME CARD VERDICT ────────────────────────────
+async function genShameCard(pct, goals, crushed) {
+  const system = `You are GHOST. ${getTone(S.rl)} 2-3 sentences. Reference actual numbers. Make it quotable — like Spotify Wrapped but devastating.`;
+  const prompt = `${buildContext()}\n\nWeekly stats: ${S.stepsDone} total steps done, ${pct}% completion rate, ${goals} goals active, ${crushed} goals crushed, ${S.streak} day streak.\n\nWrite the weekly shame card verdict.`;
+  return await callClaude([{ role: 'user', content: prompt }], system, 150);
+}
+
+// ── ROASTMASTER ────────────────────────────────────────────
+const MAX_CHAT = 20;
+const FREE_MSG_LIMIT = 3; // free users get 3 messages before paywall
+let chatHistory = [];
+let isSending = false;
+let freeMessagesUsed = 0;
+
+function getRMSystem() {
+  const name = sanitizeInput(S.user?.name || 'User', 50);
+  return `You are the ROASTMASTER — the AI personal coach inside the GHOST accountability app. You have complete knowledge of ${name}'s goals and progress.\n\n${getTone(S.rl)}\n\nCurrent data: ${buildContext()}\n\nYou are not a generic chatbot. Reference specific goals and numbers in every response. Keep responses under 100 words. Be direct. Be memorable.`;
+}
+
+async function sendMsg() {
+  const inp = document.getElementById('chat-inp');
+  const msg = sanitizeInput(inp.value, 500);
+  if (!msg || isSending) return;
+
+  // Free tier limit check
+  if (!S.isPro && freeMessagesUsed >= FREE_MSG_LIMIT) {
+    document.getElementById('rm-upsell').style.display = 'block';
+    document.getElementById('rm-inp-wrap').style.display = 'none';
+    scrollChat();
+    return;
+  }
+
+  inp.value = ''; inp.style.height = 'auto';
+  addChatBubble('user', msg);
+  if (chatHistory.length >= MAX_CHAT) chatHistory = chatHistory.slice(-MAX_CHAT + 2);
+  chatHistory.push({ role: 'user', content: msg });
+  setRMStatus('THINKING...');
+  isSending = true;
+  document.getElementById('chat-send').disabled = true;
+
+  // Typing indicator
+  const tid = 'typ-' + Date.now();
+  const tEl = document.createElement('div');
+  tEl.id = tid; tEl.className = 'msg bot';
+  tEl.innerHTML = '<div class="msg-av">🤖</div><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  document.getElementById('chat-area').appendChild(tEl);
+  scrollChat();
+
+  const reply = await callClaude(chatHistory, getRMSystem(), 200);
+  document.getElementById(tid)?.remove();
+
+  const final = reply || "My connection is being ghosted right now. Ironic. Try again.";
+  chatHistory.push({ role: 'assistant', content: final });
+  addChatBubble('bot', final);
+  setRMStatus('ONLINE — READY TO JUDGE YOU');
+  isSending = false;
+  document.getElementById('chat-send').disabled = false;
+
+  // Increment free message counter
+  if (!S.isPro) {
+    freeMessagesUsed++;
+    const left = FREE_MSG_LIMIT - freeMessagesUsed;
+    const counter = document.getElementById('rm-msg-counter');
+    const leftEl = document.getElementById('rm-msg-left');
+    if (leftEl) leftEl.textContent = left;
+    if (left <= 0) {
+      // Show upsell after a short delay so they read the last message
+      setTimeout(() => {
+        document.getElementById('rm-upsell').style.display = 'block';
+        document.getElementById('rm-inp-wrap').style.display = 'none';
+        if (counter) counter.style.display = 'none';
+        scrollChat();
+      }, 1200);
+    }
+  }
+}
+
+function addChatBubble(role, text) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = role === 'bot'
+    ? `<div class="msg-av">🤖</div><div class="msg-bubble">${esc(text)}</div>`
+    : `<div class="msg-bubble">${esc(text)}</div>`;
+  document.getElementById('chat-area').appendChild(div);
+  scrollChat();
+}
+
+function scrollChat() {
+  const a = document.getElementById('chat-area');
+  if (a) setTimeout(() => { a.scrollTop = a.scrollHeight; }, 60);
+}
+
+function setRMStatus(s) {
+  const el = document.getElementById('rm-status');
+  if (el) el.textContent = s;
+}
+
+function initRoastmaster() {
+  // Reset upsell/input state each time we enter the screen
+  document.getElementById('rm-upsell').style.display = 'none';
+  document.getElementById('rm-inp-wrap').style.display = 'flex';
+
+  // Show free message counter for non-Pro users
+  const counter = document.getElementById('rm-msg-counter');
+  if (counter) {
+    if (!S.isPro) {
+      counter.style.display = 'block';
+      const left = FREE_MSG_LIMIT - freeMessagesUsed;
+      const leftEl = document.getElementById('rm-msg-left');
+      if (leftEl) leftEl.textContent = Math.max(0, left);
+      // If limit already hit, show upsell immediately
+      if (freeMessagesUsed >= FREE_MSG_LIMIT) {
+        document.getElementById('rm-upsell').style.display = 'block';
+        document.getElementById('rm-inp-wrap').style.display = 'none';
+        counter.style.display = 'none';
+      }
+    } else {
+      counter.style.display = 'none';
+    }
+  }
+
+  // Context bar — show goal progress pills
+  const ctx = document.getElementById('rm-ctx');
+  ctx.innerHTML = '';
+  if (S.goals.length === 0) {
+    const empty = document.createElement('span');
+    empty.className = 'ctx-pill';
+    empty.textContent = 'No goals yet — add one first';
+    ctx.appendChild(empty);
+  } else {
+    S.goals.forEach(g => {
+      const pct = Math.round((g.steps.filter(s => s.done).length / g.steps.length) * 100);
+      const span = document.createElement('span');
+      span.className = 'ctx-pill';
+      span.textContent = g.name + ': ' + pct + '%';
+      ctx.appendChild(span);
+    });
+  }
+
+  // Opening message — only on first visit
+  if (chatHistory.length === 0) {
+    const openers = {
+      soft:   `Hey ${S.user?.name || 'there'}! I'm your Roastmaster — an AI coach that actually knows your goals and progress. I'm here to help you move forward. What's on your mind?`,
+      medium: `${S.user?.name || 'Hey'}. I'm the Roastmaster. I can see all your goals and exactly how much you've done on each. What do you want to work through?`,
+      hard:   `${S.user?.name || 'Right'}. Roastmaster here. I know what you've been working on — and what you've been avoiding. What do you need help with?`,
+      brutal: `${S.user?.name || 'Listen'}. I've been looking at your goals and your progress. We have things to discuss. What's your excuse today?`,
+    };
+    addChatBubble('bot', openers[S.rl || 'medium']);
+    // Focus input after a short delay
+    setTimeout(() => {
+      const inp = document.getElementById('chat-inp');
+      if (inp && document.getElementById('rm-inp-wrap').style.display !== 'none') inp.focus();
+    }, 400);
+  }
+}
+
+// ── STATE ──────────────────────────────────────────────────
+const RLC = {
+  soft:   { label: '🌱 SOFT',   color: '#39ff14' },
+  medium: { label: '👀 MEDIUM', color: '#ffd60a' },
+  hard:   { label: '🔥 HARD',   color: '#ff9500' },
+  brutal: { label: '💀 BRUTAL', color: '#FF3B3B' },
+};
+const GRADS = { gc0: '#fff', gc1: '#FF3B3B', gc2: '#00f0ff', gc3: '#39ff14', gc4: '#bf5af2' };
+
+let S = { user: null, rl: null, goals: [], stepsDone: 0, streak: 0, log: [], isPro: false, proToken: null };
+let pendRL = null, pendRLC = null;
+
+function save() {
+  try { localStorage.setItem('ghost_v3', JSON.stringify(S)); }
+  catch (e) { console.warn('localStorage save failed', e); }
+}
+
+function load() {
+  try {
+    const d = localStorage.getItem('ghost_v3');
+    if (!d) return;
+    const parsed = JSON.parse(d);
+    // FIX: migrate goals missing lastActivity field
+    if (parsed.goals) {
+      parsed.goals = parsed.goals.map(g => ({
+        ...g,
+        lastActivity: g.lastActivity || g.created || Date.now()
+      }));
+    }
+    S = { ...S, ...parsed };
+  } catch (e) { console.warn('localStorage load failed', e); }
+}
+
+// ── ROUTING ────────────────────────────────────────────────
+let cur = 'v-ob', prev = 'v-home';
+
+function G(id, navId) {
+  const old = document.getElementById(cur);
+  if (old && old.id !== id) { old.classList.remove('active'); old.classList.add('exit'); setTimeout(() => old.classList.remove('exit'), 250); }
+  document.getElementById(id).classList.add('active');
+  cur = id;
+  const noNav = ['v-ob', 'v-login', 'v-roast', 'v-pw'];
+  document.getElementById('nav').style.display = noNav.includes(id) ? 'none' : 'flex';
+  if (navId) { document.querySelectorAll('.nb').forEach(b => b.classList.remove('active')); const nb = document.getElementById(navId); if (nb) nb.classList.add('active'); }
+  if (id === 'v-home') renderHome().catch(e => console.error('[Ghost] renderHome error:', e));
+  if (id === 'v-stats') renderStats().catch(e => console.error('[Ghost] renderStats error:', e));
+  if (id === 'v-profile') renderProfile();
+  if (id === 'v-rl-change') renderRLC();
+  if (id === 'v-roastmaster') initRoastmaster();
+}
+function navTo(id, navId) { prev = cur; G(id, navId); }
+function goBack() {
+  const map = { 'v-home': 'nb-home', 'v-stats': 'nb-stats', 'v-profile': 'nb-profile', 'v-roastmaster': 'nb-rm' };
+  G(prev, map[prev] || 'nb-home');
+}
+
+// ── CUSTOM CONFIRM ─────────────────────────────────────────
+let confirmCallback = null;
+function showConfirm(title, msg, onYes) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  confirmCallback = onYes;
+  document.getElementById('confirm-overlay').classList.add('open');
+  document.getElementById('confirm-yes').onclick = () => { closeConfirm(); if (confirmCallback) confirmCallback(); };
+}
+function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('open'); }
+function confirmSignout() {
+  showConfirm('SIGN OUT?', "You'll need to sign back in. Your data stays saved locally.", doSignout);
+}
+
+// ── LOGIN ──────────────────────────────────────────────────
+let isSU = true;
+function toggleMode() {
+  isSU = !isSU;
+  document.getElementById('form-su').style.display = isSU ? 'block' : 'none';
+  document.getElementById('form-si').style.display = isSU ? 'none' : 'block';
+  document.getElementById('lhead').textContent = isSU ? 'CREATE ACCOUNT' : 'WELCOME BACK';
+  document.getElementById('lhead-sub').textContent = isSU ? '// Join and stop haunting your own potential.' : '// Your goals are still waiting. Unlike you.';
+}
+function showErr(id, v) { document.getElementById(id).style.display = v ? 'block' : 'none'; }
+
+function doSignup() {
+  const nm = sanitizeInput(document.getElementById('f-name').value, 50);
+  const em = sanitizeInput(document.getElementById('f-email').value, 200);
+  const pw = document.getElementById('f-pass').value;
+  let ok = true;
+  showErr('e-name', !nm); if (!nm) ok = false;
+  showErr('e-email', !em || !em.includes('@') || !em.includes('.')); if (!em || !em.includes('@')) ok = false;
+  showErr('e-pass', pw.length < 6); if (pw.length < 6) ok = false;
+  if (!ok) return;
+  // NOTE: In production, send to your auth backend (Firebase/Supabase). Never store passwords client-side.
+  S.user = { name: nm, email: em }; save(); G('v-roast', '');
+}
+
+function doSignin() {
+  const em = sanitizeInput(document.getElementById('si-email').value, 200);
+  const pw = document.getElementById('si-pass').value;
+  let ok = true;
+  showErr('e-si', !em || !em.includes('@')); if (!em || !em.includes('@')) ok = false;
+  showErr('e-sip', pw.length < 6); if (pw.length < 6) ok = false;
+  if (!ok) return;
+  // NOTE: In production, verify against your auth backend.
+  if (S.user && S.user.email === em) {
+    G(S.rl ? 'v-home' : 'v-roast', S.rl ? 'nb-home' : '');
+    if (S.rl) { document.getElementById('nav').style.display = 'flex'; renderHome(); }
+  } else {
+    S.user = { name: em.split('@')[0], email: em }; save(); G('v-roast', '');
+  }
+}
+
+function doGoogle() {
+  // NOTE: Replace with real Firebase/Supabase Google auth in production
+  S.user = { name: 'Ghost User', email: 'ghost@example.com' }; save();
+  showToast('"Google auth — wire up Firebase to activate this."');
+  setTimeout(() => G(S.rl ? 'v-home' : 'v-roast', S.rl ? 'nb-home' : ''), 1000);
+}
+
+function doSignout() { S.user = null; save(); G('v-login', ''); }
+
+// ── ROAST LEVEL ────────────────────────────────────────────
+function pickRL(l) {
+  pendRL = l;
+  ['soft', 'medium', 'hard', 'brutal'].forEach(x => document.getElementById('rl-' + x).classList.toggle('selected', x === l));
+  const btn = document.getElementById('rl-cta');
+  btn.disabled = false;
+  btn.textContent = 'LET\'S GO — ' + l.toUpperCase() + ' →';
+}
+function confirmRL() {
+  if (!pendRL) return; S.rl = pendRL; save();
+  document.getElementById('nav').style.display = 'flex';
+  G('v-home', 'nb-home'); renderHome();
+  showToast('"Welcome. I already know things about you you haven\'t told anyone."');
+}
+function renderRLC() {
+  pendRLC = S.rl;
+  ['soft', 'medium', 'hard', 'brutal'].forEach(x => document.getElementById('rc-' + x).classList.toggle('selected', x === S.rl));
+  document.getElementById('rc-cta').textContent = 'SAVE — ' + (S.rl || '').toUpperCase() + ' →';
+}
+function pickRLC(l) {
+  pendRLC = l;
+  ['soft', 'medium', 'hard', 'brutal'].forEach(x => document.getElementById('rc-' + x).classList.toggle('selected', x === l));
+  document.getElementById('rc-cta').textContent = 'SAVE — ' + l.toUpperCase() + ' →';
+}
+function saveRLC() { if (!pendRLC) return; S.rl = pendRLC; save(); goBack(); showToast('"Roast level updated. You asked for this."'); updateBadge(); }
+function updateBadge() {
+  const cfg = RLC[S.rl || 'medium'];
+  const b = document.getElementById('rl-badge'); if (!b) return;
+  b.textContent = cfg.label; b.style.color = cfg.color; b.style.borderColor = cfg.color; b.style.background = cfg.color + '18';
+}
+
+// ── STEP BANK (offline fallback) ───────────────────────────
+const BANK = {
+  fitness: [
+    { title: "Stop googling workouts, actually move", detail: "10 minutes of anything physical today. Walking counts." },
+    { title: "Track what you're actually eating", detail: "Log food for 3 days. The results will upset you." },
+    { title: "Schedule workouts like real meetings", detail: "Block 3 slots this week. Treat them as non-negotiable." },
+    { title: "Pick a workout you won't quit in week two", detail: "Choose something you mildly enjoy. Hate leads to quitting." },
+    { title: "Sleep 7-8 hours — it's part of the plan", detail: "Poor sleep tanks metabolism, recovery, and willpower." },
+    { title: "Tell someone your specific fitness goal", detail: "Accountability is uncomfortable. That's why it works." },
+  ],
+  learn: [
+    { title: "Close the tutorial, actually practice", detail: "50% doing, not watching. Passive learning is procrastination." },
+    { title: "Pick ONE resource and commit", detail: "Not five courses. One. 30 days minimum." },
+    { title: "20 minutes daily, no exceptions", detail: "Consistent small sessions beat marathon sessions every time." },
+    { title: "Build something embarrassingly small", detail: "Apply the skill to a tiny real project right now." },
+    { title: "Find others learning the same thing", detail: "Community accelerates learning and makes quitting awkward." },
+    { title: "Teach it to someone — or a wall", detail: "Explaining reveals exactly what you don't understand." },
+  ],
+  money: [
+    { title: "Look at your bank account right now", detail: "Can't fix what you refuse to face." },
+    { title: "Categorise last month's spending", detail: "The subscription line will be embarrassing. Do it anyway." },
+    { title: "Cancel one subscription you forgot", detail: "There's at least one you haven't used in 6 months." },
+    { title: "Automate savings before you spend it", detail: "$50/month automated is $600/year you didn't notice leaving." },
+    { title: "Build a budget you'll actually follow", detail: "50/30/20. Needs, wants, savings. Simple enough to survive." },
+    { title: "Start an emergency fund — $1k first", detail: "This one thing prevents most financial disasters." },
+  ],
+  business: [
+    { title: "Talk to 10 potential customers first", detail: "No real customers = no real product. Find them." },
+    { title: "Write a one-page plan — not a novel", detail: "Customer, offer, distribution, revenue. One page." },
+    { title: "Ship the ugly version that works", detail: "Perfection is how you spend 2 years building nothing." },
+    { title: "Get one paying customer — just one", detail: "Don't think about scale until someone has actually paid you." },
+    { title: "Set up the boring legal stuff today", detail: "Register, separate bank account, track expenses from day one." },
+    { title: "Start marketing before you're ready", detail: "You need an audience before launch, not after." },
+  ],
+  default: [
+    { title: "Define what 'done' actually means", detail: "Write the exact definition. Vague goals produce vague results." },
+    { title: "Find the embarrassingly small first step", detail: "One action so tiny it feels ridiculous. Do it today." },
+    { title: "Study 3 people who've done this", detail: "30 minutes finding real examples. Copy what they did." },
+    { title: "Put it in your calendar with a time", detail: "Not scheduled = a wish. Give it a specific slot." },
+    { title: "Tell someone your goal and deadline", detail: "Pick someone who will actually follow up on you." },
+    { title: "Sunday review: planned vs. actual", detail: "Weekly. Non-negotiable. No measurement = just hoping." },
+    { title: "Pre-solve your most likely excuse now", detail: "You know how you'll fail. Build the counter-plan today." },
+  ]
+};
+const FALLBACK_ROASTS = [
+  "Yes, you have to do this one.",
+  "Can't skip to the finish line.",
+  "Not optional. Despite what you're thinking.",
+  "This is where most people open TikTok instead. Don't.",
+  "The step you'll try to skip. Don't.",
+  "Every person who succeeded did this. Every one.",
+];
+
+function getBank(goal) {
+  const g = goal.toLowerCase();
+  if (/weight|fit|gym|run|exercise|diet|health|muscle|fat|cardio|workout|sport|swim|yoga|lose/.test(g)) return BANK.fitness;
+  if (/learn|study|language|spanish|french|code|program|skill|course|read|guitar|piano|music|draw|paint/.test(g)) return BANK.learn;
+  if (/money|save|debt|invest|budget|income|salary|financial|rich|wealth|broke|spend/.test(g)) return BANK.money;
+  if (/business|startup|company|app|product|launch|brand|sell|entrepreneur|freelance|hustle/.test(g)) return BANK.business;
+  return BANK.default;
+}
+
+// ── MODAL ──────────────────────────────────────────────────
+let isAddingGoal = false; // FIX: race condition guard
+
+function openModal() {
+  if (!S.isPro && S.goals.length >= 3) { prev = cur; G('v-pw', ''); return; }
+  document.getElementById('modal').classList.add('open');
+  setTimeout(() => document.getElementById('goal-inp').focus(), 300);
+}
+function closeModal() {
+  if (isAddingGoal) return; // Don't close while generating
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('goal-inp').value = '';
+  document.getElementById('mgen').style.display = 'none';
+  document.getElementById('msubmit').disabled = false;
+  document.getElementById('mcancel').disabled = false;
+  isAddingGoal = false;
+}
+
+async function addGoal() {
+  if (isAddingGoal) return; // FIX: prevent double-submit
+  const raw = document.getElementById('goal-inp').value.trim();
+  const v = sanitizeInput(raw, 80);
+  if (!v || v.length < 3) { showToast('"Write an actual goal. Come on."'); return; }
+
+  isAddingGoal = true;
+  document.getElementById('msubmit').disabled = true;
+  document.getElementById('mcancel').disabled = true;
+  document.getElementById('mgen').style.display = 'block';
+
+  const bank = getBank(v);
+  const shuffled = [...bank].sort(() => Math.random() - .5).slice(0, 6);
+  const content = await genGoalContent(v);
+
+  const goal = {
+    id: Date.now(),
+    name: v,
+    roast: content?.intro || 'Another goal. Let\'s see if this one survives contact with your schedule.',
+    steps: shuffled.map((s, i) => ({
+      ...s,
+      done: false,
+      roast: (content?.stepRoasts?.[i]) || FALLBACK_ROASTS[i % FALLBACK_ROASTS.length],
+    })),
+    color: 'gc' + (S.goals.length % 5),
+    created: Date.now(),
+    lastActivity: Date.now(),
+  };
+
+  S.goals.push(goal); save();
+  isAddingGoal = false;
+  closeModal(); renderHome();
+  showToast('"' + goal.roast.slice(0, 80) + '"');
+}
+
+// ── HOME ───────────────────────────────────────────────────
+async function renderHome() {
+  updateBadge();
+  const list = document.getElementById('goals-list');
+  list.innerHTML = '';
+  if (!S.goals.length) {
+    list.innerHTML = '<div class="empty">No goals yet.<br>You\'re ghosting the app itself.<br>That\'s commitment to avoidance.</div>';
+  } else {
+    S.goals.forEach((g, i) => {
+      const done = g.steps.filter(s => s.done).length;
+      const pct = Math.round((done / g.steps.length) * 100);
+      const card = document.createElement('div');
+      card.className = 'goal-card gc' + (i % 5);
+      // FIX: use textContent for user data, not innerHTML
+      const nameEl = document.createElement('div');
+      nameEl.className = 'gc-name'; nameEl.textContent = g.name;
+      const badge = document.createElement('div');
+      badge.className = 'gc-badge ' + (pct === 100 ? 'bd' : 'ba');
+      badge.textContent = pct === 100 ? 'CRUSHED' : 'HAUNTED';
+      const top = document.createElement('div'); top.className = 'gc-top';
+      top.appendChild(nameEl); top.appendChild(badge);
+      const bar = document.createElement('div'); bar.className = 'mini-bar';
+      const fill = document.createElement('div'); fill.className = 'mini-fill';
+      fill.style.cssText = `width:${pct}%;background:${GRADS['gc' + i % 5]}`;
+      bar.appendChild(fill);
+      const meta = document.createElement('div'); meta.className = 'gc-meta';
+      meta.textContent = done + '/' + g.steps.length + ' steps · ' + pct + '%';
+      card.appendChild(top); card.appendChild(bar); card.appendChild(meta);
+      card.onclick = () => openGoal(i);
+      list.appendChild(card);
+    });
+  }
+  // Generate streak message
+  const el = document.getElementById('snum'); if (!el) return;
+  el.textContent = S.streak; el.setAttribute('data-v', S.streak);
+  const msg = S.streak > 0 ? await genStreakMsg() : null;
+  const fallbacks = { 0: '"Nothing yet. Classic ghost behaviour."', 1: '"One day. Come back tomorrow."', 3: '"Three days. Don\'t ruin it."', 7: '"A week. Genuinely impressed."' };
+  const fb = Object.keys(fallbacks).reverse().find(k => S.streak >= Number(k));
+  document.getElementById('smsg').textContent = msg ? `"${msg}"` : (fallbacks[fb] || '"Keep going."');
+  save();
+}
+
+async function updateStreak() {
+  const total = S.goals.reduce((a, g) => a + g.steps.filter(s => s.done).length, 0);
+  S.streak = total > 0 ? Math.min(total, 30) : 0;
+}
+
+// ── GOAL DETAIL ────────────────────────────────────────────
+let curGoal = -1;
+
+function openGoal(i) {
+  // FIX: bounds check
+  if (i < 0 || i >= S.goals.length) return;
+  curGoal = i; prev = 'v-home';
+  const g = S.goals[i];
+  document.getElementById('det-title').textContent = g.name; // textContent not innerHTML
+  document.getElementById('det-roast').textContent = g.roast ? '"' + g.roast + '"' : '';
+  renderSteps(); G('v-det', '');
+}
+
+function renderSteps() {
+  if (curGoal < 0 || curGoal >= S.goals.length) return; // FIX: bounds check
+  const g = S.goals[curGoal];
+  const done = g.steps.filter(s => s.done).length;
+  const pct = Math.round((done / g.steps.length) * 100);
+  document.getElementById('det-pct').textContent = done + '/' + g.steps.length + ' — ' + pct + '%';
+  document.getElementById('det-pct').style.color = pct === 100 ? 'var(--green)' : '#fff';
+  document.getElementById('det-fill').style.width = pct + '%';
+  const sc = document.getElementById('steps-scroll'); sc.innerHTML = '';
+  g.steps.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'step-item' + (s.done ? ' done' : '');
+    // FIX: all user content via textContent, not innerHTML
+    const cb = document.createElement('div'); cb.className = 'scb' + (s.done ? ' on' : '');
+    if (s.done) cb.innerHTML = '<svg width="11" height="9" viewBox="0 0 11 9"><polyline points="1,4.5 4,7.5 10,1" stroke="#080808" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const body = document.createElement('div'); body.style.flex = '1';
+    const title = document.createElement('div'); title.className = 'stitle';
+    title.textContent = (i + 1) + '. ' + s.title;
+    const detail = document.createElement('div'); detail.className = 'sdetail'; detail.textContent = s.detail;
+    body.appendChild(title); body.appendChild(detail);
+    if (!s.done) {
+      const roast = document.createElement('div'); roast.className = 'sroast'; roast.textContent = '// ' + s.roast;
+      body.appendChild(roast);
+    }
+    div.appendChild(cb); div.appendChild(body);
+    div.onclick = () => toggleStep(i);
+    sc.appendChild(div);
+  });
+}
+
+async function toggleStep(i) {
+  if (curGoal < 0 || curGoal >= S.goals.length) return; // FIX: bounds check
+  const g = S.goals[curGoal];
+  if (i < 0 || i >= g.steps.length) return;
+  g.steps[i].done = !g.steps[i].done;
+  g.lastActivity = Date.now();
+  if (g.steps[i].done) {
+    S.stepsDone++;
+    // Don't await — update UI immediately, toast when ready
+    genDoneMsg(g.name, g.steps[i].title).then(msg => {
+      if (msg) { showToast('"' + msg + '"'); S.log.unshift(msg); if (S.log.length > 12) S.log.pop(); save(); }
+    });
+    showToast('"Step done. Claude is writing your roast..."');
+  }
+  await updateStreak(); save(); renderSteps();
+  if (g.steps.every(s => s.done)) {
+    const ctx = buildContext();
+    callClaude([{ role: 'user', content: `User just completed ALL steps for goal "${sanitizeInput(g.name, 60)}". ${ctx} Write 1-sentence reaction, under 20 words. ${getTone(S.rl)}` }], 'You are GHOST.', 60)
+      .then(msg => { if (msg) setTimeout(() => showToast('"' + msg + '"'), 600); });
+  }
+}
+
+// ── STATS ──────────────────────────────────────────────────
+async function renderStats() {
+  const crushed = S.goals.filter(g => g.steps.every(s => s.done)).length;
+  const done = S.goals.reduce((a, g) => a + g.steps.filter(s => s.done).length, 0);
+  const total = S.goals.reduce((a, g) => a + g.steps.length, 0);
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  function ss(id, v) { const el = document.getElementById(id); if (el) { el.textContent = v; el.setAttribute('data-v', v); } }
+  ss('s-goals', S.goals.length); ss('s-steps', S.stepsDone); ss('s-crushed', crushed); ss('s-streak', S.streak);
+  const pb = document.getElementById('pro-banner'); if (pb) pb.style.display = S.isPro ? 'none' : 'block';
+  const log = document.getElementById('rlog');
+  if (log) {
+    log.innerHTML = '';
+    if (S.log.length) {
+      S.log.forEach(r => { const d = document.createElement('div'); d.className = 'rlog-item'; d.textContent = '"' + r + '"'; log.appendChild(d); });
+    } else {
+      log.innerHTML = '<div class="rlog-item">// Complete steps to see your haunting history.</div>';
+    }
+  }
+  // Shame card
+  const now = new Date();
+  const start = new Date(now); start.setDate(now.getDate() - now.getDay());
+  document.getElementById('sc-date').textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+  document.getElementById('sc-range').textContent = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() + ' — ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+  const sg = document.getElementById('sc-stats'); sg.innerHTML = '';
+  const stats = [
+    { n: pct + '%', l: 'COMPLETION', c: 'var(--red)' },
+    { n: S.goals.length, l: 'GOALS ACTIVE', c: '#fff' },
+    { n: crushed, l: 'CRUSHED', c: 'var(--green)' },
+    { n: S.streak, l: 'DAY STREAK', c: 'var(--cyan)' },
+  ];
+  stats.forEach(st => {
+    const box = document.createElement('div'); box.className = 'sc-stat';
+    const num = document.createElement('div'); num.className = 'sc-stat-n'; num.style.color = st.c; num.textContent = st.n;
+    const lbl = document.createElement('div'); lbl.className = 'sc-stat-l'; lbl.textContent = st.l;
+    box.appendChild(num); box.appendChild(lbl); sg.appendChild(box);
+  });
+  // Generate verdict
+  const vEl = document.getElementById('sc-verdict');
+  vEl.textContent = '// Generating your weekly roast...';
+  const verdict = await genShameCard(pct, S.goals.length, crushed);
+  vEl.textContent = verdict || (pct + '% completion. Ghost has seen worse. Not many, but some.');
+}
+
+async function shareCard() {
+  const text = `My Ghost Score this week: ${document.getElementById('sc-verdict').textContent}\n\nStop ghosting yourself → ${window.location.origin}`;
+  if (navigator.share) {
+    try { await navigator.share({ title: 'My Weekly Ghost Shame Card', text, url: window.location.origin }); }
+    catch (e) { if (e.name !== 'AbortError') showToast('"Screenshot it and post it manually. We dare you."'); }
+  } else {
+    // Fallback: copy to clipboard
+    try { await navigator.clipboard.writeText(text); showToast('"Copied to clipboard. Now post it. Tag @ghostapp."'); }
+    catch { showToast('"Screenshot this and post it. Tag @ghostapp."'); }
+  }
+}
+
+// ── PROFILE ────────────────────────────────────────────────
+function renderProfile() {
+  if (S.user) {
+    document.getElementById('prof-name').textContent = S.user.name || '—';
+    document.getElementById('prof-email').textContent = S.user.email || '—';
+  }
+  const cfg = RLC[S.rl || 'medium'];
+  const rl = document.getElementById('prof-rl'); if (rl) { rl.textContent = cfg.label; rl.style.color = cfg.color; }
+  const pp = document.getElementById('prof-pro');
+  if (pp) {
+    pp.innerHTML = '';
+    const span = document.createElement('span');
+    span.style.color = S.isPro ? 'var(--green)' : 'var(--red)';
+    span.textContent = S.isPro ? 'Pro ✓' : 'Free plan';
+    pp.appendChild(span);
+    if (!S.isPro) { const arr = document.createElement('span'); arr.className = 'sarr'; arr.textContent = '›'; pp.appendChild(arr); }
+  }
+}
+
+// ── PAYWALL ────────────────────────────────────────────────
+function unlockPro() {
+  // NOTE: In production, this should only be called after Stripe payment confirmation via webhook
+  // The proToken provides minimal client-side verification — not a substitute for server-side checks
+  S.isPro = true;
+  // Safe base64 encoding that handles unicode chars in email/name
+  const tokenData = encodeURIComponent((S.user?.email || 'unknown') + ':ghost_pro:' + Date.now());
+  S.proToken = btoa(tokenData);
+  save();
+  const btn = document.getElementById('pw-cta');
+  btn.textContent = '✓ PRO UNLOCKED'; btn.style.background = 'var(--green)'; btn.style.color = '#080808';
+  showToast('"Welcome to Pro. Now you have absolutely no excuse."');
+  setTimeout(() => goBack(), 1800);
+}
+
+// ── TOAST ──────────────────────────────────────────────────
+let toastT;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  const cfg = RLC[S.rl || 'medium'];
+  t.textContent = msg; t.style.color = cfg.color; t.style.borderLeftColor = cfg.color;
+  t.classList.add('show'); clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 3800);
+}
+
+// ── OFFLINE DETECTION ──────────────────────────────────────
+let isOffline = false;
+function showOffline(v) {
+  if (v === isOffline) return;
+  isOffline = v;
+  document.getElementById('offline-bar').style.display = v ? 'block' : 'none';
+}
+window.addEventListener('online', () => showOffline(false));
+window.addEventListener('offline', () => showOffline(true));
+
+// ── UTILS ──────────────────────────────────────────────────
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// ── EVENT LISTENERS ────────────────────────────────────────
+document.getElementById('chat-inp').addEventListener('input', function () {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+});
+document.getElementById('chat-inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+// FIX: check isAddingGoal before firing from Enter key
+document.getElementById('goal-inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !isAddingGoal) addGoal();
+  if (e.key === 'Escape') closeModal();
+});
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target.id === 'modal' && !isAddingGoal) closeModal();
+});
+document.getElementById('f-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doSignup(); });
+document.getElementById('si-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doSignin(); });
+
+// ── INIT ───────────────────────────────────────────────────
+load();
+if (!navigator.onLine) showOffline(true);
+if (S.user && S.rl) {
+  document.getElementById('v-ob').classList.remove('active');
+  document.getElementById('v-home').classList.add('active');
+  cur = 'v-home';
+  document.getElementById('nav').style.display = 'flex';
+  document.getElementById('nb-home').classList.add('active');
+  renderHome().catch(e => console.error('[Ghost] renderHome init error:', e));
+} else if (S.user && !S.rl) {
+  document.getElementById('v-ob').classList.remove('active');
+  document.getElementById('v-roast').classList.add('active');
+  cur = 'v-roast';
+}
+</script>
+<script>
+// Only register SW on the real deployed domain — not in dev/sandbox environments
+if ('serviceWorker' in navigator) {
+  const host = window.location.hostname;
+  const isSandbox = host.includes('claudeusercontent.com') || host === 'localhost' || host === '127.0.0.1';
+  if (!isSandbox) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(console.warn));
+  }
+}
+</script>
+</body>
+</html>
