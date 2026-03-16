@@ -1,5 +1,6 @@
 // /api/roast.js — Vercel Serverless Function (CommonJS)
-// Uses module.exports and manual body parsing for full Vercel compatibility
+
+const https = require('https');
 
 const RATE_LIMIT_WINDOW = 60000;
 const RATE_LIMIT_MAX = 20;
@@ -34,7 +35,6 @@ function sanitizeMessages(messages) {
     .filter(m => m.content.length > 0);
 }
 
-// Read raw body from request stream (Vercel doesn't auto-parse)
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let data = '';
@@ -44,6 +44,30 @@ function readBody(req) {
       catch (e) { reject(e); }
     });
     req.on('error', reject);
+  });
+}
+
+// Use Node's built-in https module — works on ALL Vercel Node versions
+function httpsPost(hostname, path, headers, body) {
+  return new Promise((resolve, reject) => {
+    const bodyStr = JSON.stringify(body);
+    const options = {
+      hostname,
+      path,
+      method: 'POST',
+      headers: {
+        ...headers,
+        'Content-Length': Buffer.byteLength(bodyStr),
+      },
+    };
+    const req = https.request(options, res => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => resolve({ status: res.statusCode, body: data }));
+    });
+    req.on('error', reject);
+    req.write(bodyStr);
+    req.end();
   });
 }
 
@@ -57,7 +81,6 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Rate limiting
   const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'unknown';
   const limit = getRateLimit(ip);
   limit.count++;
@@ -65,16 +88,15 @@ module.exports = async function handler(req, res) {
     return res.status(429).json({ error: 'Too many requests' });
   }
 
-  // Parse body
   let body;
   try {
     body = await readBody(req);
   } catch (e) {
-    return res.status(400).json({ error: 'Invalid JSON body' });
+    return res.status(400).json({ error: 'Invalid JSON' });
   }
 
   if (!body || !Array.isArray(body.messages) || body.messages.length === 0) {
-    return res.status(400).json({ error: 'Invalid request — messages required' });
+    return res.status(400).json({ error: 'Invalid request' });
   }
 
   const { messages, system, maxTokens = 300 } = body;
@@ -82,37 +104,43 @@ module.exports = async function handler(req, res) {
   const safeSystem = typeof system === 'string' ? system.slice(0, 3000) : undefined;
   const safeMaxTokens = Math.min(Math.max(Number(maxTokens) || 300, 50), 500);
 
-  // API key
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    console.error('[Ghost] ANTHROPIC_API_KEY is not set in environment variables');
-    return res.status(503).json({ error: 'Service not configured — API key missing' });
+    console.error('[Ghost] ANTHROPIC_API_KEY not set');
+    return res.status(503).json({ error: 'Service not configured' });
   }
 
-  // Call Claude
   try {
-    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
+    const claudeBody = {
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: safeMaxTokens,
+      messages: safeMessages,
+    };
+    if (safeSystem) claudeBody.system = safeSystem;
+
+    const result = await httpsPost(
+      'api.anthropic.com',
+      '/v1/messages',
+      {
         'content-type': 'application/json',
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: safeMaxTokens,
-        ...(safeSystem ? { system: safeSystem } : {}),
-        messages: safeMessages,
-      }),
-    });
+      claudeBody
+    );
 
-    if (!claudeRes.ok) {
-      const errText = await claudeRes.text();
-      console.error('[Ghost] Claude API error:', claudeRes.status, errText);
-      return res.status(502).json({ error: 'Claude API error', status: claudeRes.status });
+    console.log('[Ghost] Claude status:', result.status);
+
+    if (result.status !== 200) {
+      console.error('[Ghost] Claude error body:', result.body);
+      return res.status(502).json({
+        error: 'Claude API error',
+        status: result.status,
+        detail: result.body, // sends full error back so we can see it
+      });
     }
 
-    const data = await claudeRes.json();
+    const data = JSON.parse(result.body);
     const text = data.content
       .filter(b => b.type === 'text')
       .map(b => b.text)
@@ -121,7 +149,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ text });
 
   } catch (err) {
-    console.error('[Ghost] Proxy fetch error:', err.message);
-    return res.status(500).json({ error: 'Internal error', detail: err.message });
+    console.error('[Ghost] Error:', err.message);
+    return res.status(500).json({ error: err.message });
   }
 };
